@@ -5,7 +5,14 @@ description: >
   queries and downloads OTA firmware updates from Motorola's servers, following
   the exact communication flow documented in the release log evidence from this
   repository.
-tools: ["read", "edit", "execute", "search", "agent"]
+target: github-copilot
+tools: ["*"]
+mcp-servers:
+  fetch:
+    type: local
+    command: npx
+    args: ["-y", "@modelcontextprotocol/server-fetch"]
+    tools: ["fetch"]
 ---
 
 # Motofw Architect Agent
