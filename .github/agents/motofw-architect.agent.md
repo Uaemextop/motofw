@@ -13,6 +13,21 @@ mcp-servers:
     command: npx
     args: ["-y", "@modelcontextprotocol/server-fetch"]
     tools: ["fetch"]
+  filesystem:
+    type: local
+    command: npx
+    args: ["-y", "@modelcontextprotocol/server-filesystem", "."]
+    tools: ["read_text_file", "read_multiple_files", "write_file", "edit_file",
+            "create_directory", "list_directory", "list_directory_with_sizes",
+            "directory_tree", "search_files", "get_file_info",
+            "list_allowed_directories"]
+  memory:
+    type: local
+    command: npx
+    args: ["-y", "@modelcontextprotocol/server-memory"]
+    tools: ["create_entities", "create_relations", "add_observations",
+            "delete_entities", "delete_observations", "delete_relations",
+            "read_graph", "search_nodes", "open_nodes"]
 ---
 
 # Motofw Architect Agent
