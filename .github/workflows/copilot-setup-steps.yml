@@ -50,8 +50,10 @@ jobs:
           node-version: "lts/*"
 
       # ── 4b. uv / uvx ──────────────────────────────────────────────────────
+      # astral-sh/setup-uv installs both `uv` (full binary) and `uvx`
+      # (separate launcher binary) — both respond to --version correctly.
       - name: Install uv (provides uv and uvx)
-        run: pip install uv
+        uses: astral-sh/setup-uv@v6
 
       # ── 5. Eclipse Temurin JDK 21 ─────────────────────────────────────────
       - name: Set up Eclipse Temurin JDK 21
