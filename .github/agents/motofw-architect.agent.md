@@ -6,28 +6,30 @@ description: >
   the exact communication flow documented in the release log evidence from this
   repository.
 target: github-copilot
-tools: ["*"]
+tools: ["execute", "read", "edit", "search",
+        "fetch/*", "filesystem/*", "memory/*", "sequential-thinking/*"]
 mcp-servers:
   fetch:
     type: local
     command: npx
     args: ["-y", "@modelcontextprotocol/server-fetch"]
-    tools: ["fetch"]
+    tools: ["*"]
   filesystem:
     type: local
     command: npx
-    args: ["-y", "@modelcontextprotocol/server-filesystem", "."]
-    tools: ["read_text_file", "read_multiple_files", "write_file", "edit_file",
-            "create_directory", "list_directory", "list_directory_with_sizes",
-            "directory_tree", "search_files", "get_file_info",
-            "list_allowed_directories"]
+    args: ["-y", "@modelcontextprotocol/server-filesystem",
+           "/home/runner/work/motofw/motofw"]
+    tools: ["*"]
   memory:
     type: local
     command: npx
     args: ["-y", "@modelcontextprotocol/server-memory"]
-    tools: ["create_entities", "create_relations", "add_observations",
-            "delete_entities", "delete_observations", "delete_relations",
-            "read_graph", "search_nodes", "open_nodes"]
+    tools: ["*"]
+  sequential-thinking:
+    type: local
+    command: npx
+    args: ["-y", "@modelcontextprotocol/server-sequential-thinking"]
+    tools: ["*"]
 ---
 
 # Motofw Architect Agent
@@ -49,6 +51,23 @@ repository.
   evidence from the release logs.
 - If a value cannot be found in the evidence, document what is missing and why,
   and mark any code that depends on it as incomplete.
+
+---
+
+## Sequential Thinking Rules
+
+- Before starting any task that involves more than two dependent steps — log
+  extraction, HTTP flow reconstruction, checksum algorithm identification,
+  test fixture design, curl verification — invoke the `sequential_thinking`
+  tool first to lay out the reasoning plan step by step.
+- Use `sequential_thinking` to revise a plan when new evidence changes your
+  understanding of the OTA protocol. Set `isRevision: true` and cite the
+  specific log record that triggered the revision.
+- Use branching (`branchFromThought`, `branchId`) when two competing
+  hypotheses about a header value or authentication scheme need to be
+  explored in parallel before one can be confirmed by the evidence.
+- Do not proceed to implementation until the final thought step explicitly
+  confirms that all required evidence has been located and cross-validated.
 
 ---
 
