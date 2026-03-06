@@ -1,0 +1,66 @@
+# Motofw configuration — copy to config.ini and fill in your values.
+# config.ini is gitignored and must never be committed.
+
+[server]
+# Production OTA server (from smali CDSUtils.SERVER_URL)
+server_url = moto-cds.appspot.com
+# China production server (for PRC devices)
+china_server_url = moto-cds.svcmot.cn
+# Base path for the check-for-upgrade endpoint
+check_base_url = cds/upgrade/1/check
+# Base path for the resources (download descriptor) endpoint
+resources_base_url = cds/upgrade/1/resources
+# Base path for the state-reporting endpoint
+state_base_url = cds/upgrade/1/state
+# OTA context identifier
+ota_context = ota
+# Use HTTPS (true/false)
+is_secure = true
+# HTTP method for check requests
+check_http_method = post
+# HTTP method for resources requests
+resources_http_method = post
+# HTTP method for state requests
+state_http_method = post
+
+[device]
+# Serial number of the device (used as identity)
+serial_number =
+# Model identifier (e.g. lamul_g)
+model_id =
+# Product name (e.g. lamul_g)
+product =
+# Internal device name (e.g. lamul)
+internal_name =
+# Manufacturer
+manufacturer = motorola
+# Carrier code
+carrier =
+# Color identifier
+color_id =
+# Current firmware build version (source version timestamp)
+source_version =
+# Current OTA SHA1 (the contextKey sent in requests)
+ota_source_sha1 =
+# Whether this is a PRC (China) device
+is_prc_device = false
+# Whether this is a production device
+is_production_device = true
+# Trigger type: user, polling, notification, setup
+triggered_by = user
+
+[http]
+# Request timeout in seconds
+timeout = 30
+# Maximum retry count
+max_retries = 3
+# Backoff values in milliseconds (comma-separated)
+backoff_values = 5000,15000,30000
+# HTTP proxy host (leave empty for no proxy)
+proxy_host =
+# HTTP proxy port (-1 means no proxy)
+proxy_port = -1
+
+[download]
+# Output directory for downloaded firmware files
+output_dir = output
