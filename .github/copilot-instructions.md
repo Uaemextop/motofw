@@ -2,15 +2,20 @@
 
 ## Project Overview
 
-**Motofw** is a Python tool designed to query and download OTA (Over-The-Air) firmware updates directly from Motorola's update servers. It allows researchers, developers, and enthusiasts to retrieve firmware packages, analyze their contents, and inspect Motorola-specific update mechanisms.
+**Motofw** is a Python tool that queries and downloads OTA (Over-The-Air)
+firmware updates directly from Motorola's update servers. It targets
+researchers, developers, and enthusiasts who want to retrieve firmware packages
+and inspect Motorola's update mechanisms.
 
 ---
 
 ## Language & Runtime
 
-- **Primary language:** Python 3.x
-- Use `pip` for dependency management (`requirements.txt` is the source of truth).
-- All scripts must be compatible with Python 3.9+.
+- Primary language: Python 3.11+.
+- Use `pip` for dependency management. `requirements.txt` is the source of
+  truth for runtime dependencies; `requirements-dev.txt` for development
+  dependencies.
+- All code must be compatible with Python 3.11+.
 
 ---
 
@@ -18,41 +23,52 @@
 
 - Follow [PEP 8](https://peps.python.org/pep-0008/) for formatting and naming.
 - Use type hints on all function signatures.
-- Prefer `pathlib.Path` over `os.path` for file operations.
-- Use f-strings for string formatting (avoid `%` or `.format()`).
+- Prefer `pathlib.Path` over `os.path` for all file operations.
+- Use f-strings for string formatting. Avoid `%`-style or `.format()`.
 - All public functions and classes must have docstrings.
-- Keep functions small and focused (single responsibility).
+- Keep functions small and focused on a single responsibility.
 
 ---
 
 ## Architecture Guidelines
 
-- Network requests must go through a shared HTTP client module so that proxy and timeout settings are centralised.
-- Firmware metadata parsing should be kept separate from download logic.
-- Avoid hardcoding URLs or API endpoints — store them in a configuration file or constants module.
-- Logging must use the standard `logging` module; do **not** use plain `print()` for diagnostics.
+- All outbound HTTP traffic must go through a single shared client so that
+  proxy, timeout, retry, and header injection settings are centralised.
+- Avoid hardcoding server URLs, endpoint paths, or API parameters. All such
+  values belong in `config.ini`.
+- Use the standard `logging` module for all diagnostic output. `print()` is
+  not permitted for diagnostics.
+- Separate concerns into modules whose boundaries reflect the actual structure
+  of the problem, derived from analysis — not from a predetermined template.
 
 ---
 
 ## Security
 
-- Never log or store credentials, tokens, or device-specific identifiers in plain text.
-- Validate and sanitise all filenames derived from server responses before writing to disk.
-- Use `hashlib` to verify firmware checksums after download.
+- Never log or store credentials, tokens, or device-specific identifiers in
+  plain text.
+- Validate and sanitise all filenames derived from server responses before
+  writing to disk.
+- Verify file checksums with `hashlib` after every download.
+- `config.ini` must be listed in `.gitignore` and never committed.
 
 ---
 
 ## Testing
 
 - Unit tests live in `tests/` and use `pytest`.
-- Mock all outbound HTTP calls in tests using `pytest-httpserver` or `responses`.
+- Mock all outbound HTTP calls in unit tests using `pytest-httpserver` or
+  `responses`.
+- Integration tests that make live server calls must be tagged separately and
+  must skip automatically when the server is unreachable.
 - Aim for ≥ 80 % coverage on core modules.
+- Test values must come from real log evidence, not from invented placeholders.
 
 ---
 
 ## Tools Available in the Development Environment
 
-The Copilot setup steps provision the following tools; use them as needed:
+The Copilot setup steps provision the following tools:
 
 | Category | Tool |
 |---|---|
@@ -72,46 +88,8 @@ The Copilot setup steps provision the following tools; use them as needed:
 
 ## Custom Agents
 
-This repository ships a specialised Copilot agent for the main development
-workflow. Select it from the Copilot agent dropdown before starting a task:
+Select the agent from the Copilot agent dropdown before starting a task:
 
-| Agent file | Purpose |
+| Agent | Purpose |
 |---|---|
-| `.github/agents/motofw-architect.agent.md` | End-to-end project designer: analyzes the Motorola OTA APK (smali + .so), deobfuscates, reverse-engineers the OTA HTTP API, downloads release ZIP logs, and scaffolds the complete Python application with `config.ini` support. |
-
----
-
-## Directory Structure
-
-```
-motofw/
-├── .github/
-│   ├── copilot-instructions.md       ← this file
-│   ├── agents/
-│   │   └── motofw-architect.agent.md ← Copilot custom agent
-│   └── workflows/
-│       └── copilot-setup-steps.yml
-│
-├── motofw/                       ← main Python package (scaffolded by agent)
-│   ├── __init__.py
-│   ├── __main__.py               ← CLI entry point
-│   ├── config.py                 ← configparser wrapper
-│   ├── cli.py                    ← argparse commands
-│   ├── http/                     ← shared HTTP client + models
-│   ├── ota/                      ← OTA query, parser, downloader
-│   ├── apk/                      ← smali analysis, .so analysis, deobfuscation
-│   ├── logs/                     ← GitHub release asset fetcher + log parser
-│   └── report/                   ← Markdown + JSON report generator
-│
-├── docs/
-│   └── api-reverse-engineering.md ← reverse-engineered OTA API documentation
-│
-├── tests/                        ← pytest test suite
-├── config.ini                    ← gitignored; fill in your real values
-├── requirements.txt
-├── requirements-dev.txt
-└── README.md
-```
-
-> **Note:** `source_code/`, `config.ini`, and `output/` are excluded from
-> version control via `.gitignore`.
+| `motofw-architect` | Builds the Motofw Python tool. Extracts the OTA server communication protocol from release log evidence and implements a tool that replicates it faithfully. |
