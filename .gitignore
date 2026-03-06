@@ -1,3 +1,6 @@
+# Cloned source code used for analysis (provisioned by Copilot setup steps)
+source_code/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
