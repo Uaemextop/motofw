@@ -7,7 +7,8 @@ description: >
   repository.
 target: github-copilot
 tools: ["execute", "read", "edit", "search",
-        "fetch/*", "filesystem/*", "memory/*", "sequential-thinking/*"]
+        "fetch/*", "filesystem/*", "memory/*", "sequential-thinking/*",
+        "github/*", "git/*"]
 mcp-servers:
   fetch:
     type: local
@@ -29,6 +30,18 @@ mcp-servers:
     type: local
     command: npx
     args: ["-y", "@modelcontextprotocol/server-sequential-thinking"]
+    tools: ["*"]
+  github:
+    type: local
+    command: npx
+    args: ["-y", "@modelcontextprotocol/server-github"]
+    env:
+      GITHUB_PERSONAL_ACCESS_TOKEN: ${{ secrets.COPILOT_MCP_GITHUB_PERSONAL_ACCESS_TOKEN }}
+    tools: ["*"]
+  git:
+    type: local
+    command: python
+    args: ["-m", "mcp_server_git", "--repository", "/home/runner/work/motofw/motofw"]
     tools: ["*"]
 ---
 

@@ -131,9 +131,9 @@ jobs:
             frida-tools \
             pwntools
 
-      # ── 12b. MCP server: fetch (used by the motofw-architect agent) ────────
-      - name: Install mcp-server-fetch
-        run: pip install mcp-server-fetch
+      # ── 12b. MCP Python servers (used by the motofw-architect agent) ─────────
+      - name: Install MCP Python servers
+        run: pip install mcp-server-fetch mcp-server-git
 
       # ── 13. Clone Motorola CCC OTA source code ────────────────────────────
       - name: Clone com_motorola_ccc_ota into source_code/
