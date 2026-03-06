@@ -1,6 +1,12 @@
 # Cloned source code used for analysis (provisioned by Copilot setup steps)
 source_code/
 
+# User-specific configuration (copy config.ini.example to config.ini)
+config.ini
+
+# Analysis output directories
+output/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

@@ -70,18 +70,49 @@ The Copilot setup steps provision the following tools; use them as needed:
 
 ---
 
+## Custom Agents
+
+This repository ships a specialised Copilot agent for the main development
+workflow. Select it from the Copilot agent dropdown before starting a task:
+
+| Agent file | Purpose |
+|---|---|
+| `.github/agents/motofw-architect.agent.md` | End-to-end project designer: analyzes the Motorola OTA APK (smali + .so), deobfuscates, reverse-engineers the OTA HTTP API, downloads release ZIP logs, and scaffolds the complete Python application with `config.ini` support. |
+
+---
+
 ## Directory Structure
 
 ```
 motofw/
 ├── .github/
-│   ├── copilot-instructions.md   ← this file
+│   ├── copilot-instructions.md       ← this file
+│   ├── agents/
+│   │   └── motofw-architect.agent.md ← Copilot custom agent
 │   └── workflows/
 │       └── copilot-setup-steps.yml
-├── source_code/                  ← gitignored, cloned by setup steps
-├── tests/
+│
+├── motofw/                       ← main Python package (scaffolded by agent)
+│   ├── __init__.py
+│   ├── __main__.py               ← CLI entry point
+│   ├── config.py                 ← configparser wrapper
+│   ├── cli.py                    ← argparse commands
+│   ├── http/                     ← shared HTTP client + models
+│   ├── ota/                      ← OTA query, parser, downloader
+│   ├── apk/                      ← smali analysis, .so analysis, deobfuscation
+│   ├── logs/                     ← GitHub release asset fetcher + log parser
+│   └── report/                   ← Markdown + JSON report generator
+│
+├── docs/
+│   └── api-reverse-engineering.md ← reverse-engineered OTA API documentation
+│
+├── tests/                        ← pytest test suite
+├── config.ini                    ← gitignored; user config (copy from .example)
+├── config.ini.example            ← committed template with placeholder values
 ├── requirements.txt
+├── requirements-dev.txt
 └── README.md
 ```
 
-> **Note:** The `source_code/` directory is excluded from version control via `.gitignore`.
+> **Note:** `source_code/`, `config.ini`, `output/`, and all smali/JADX
+> output directories are excluded from version control via `.gitignore`.

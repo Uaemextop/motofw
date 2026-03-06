@@ -1,0 +1,56 @@
+# =============================================================================
+# Motofw — Configuration Template
+# =============================================================================
+# Copy this file to config.ini and fill in your values.
+# config.ini is listed in .gitignore and will never be committed.
+# =============================================================================
+
+[device]
+# Motorola device model identifier (e.g. motorola edge 40)
+model            = YOUR_DEVICE_MODEL
+# Device SKU / hardware version ('adb shell getprop ro.product.model')
+sku              = YOUR_DEVICE_SKU
+# Current software version (e.g. T3TIS33.12-45-5)
+software_version = YOUR_SOFTWARE_VERSION
+hardware_version = YOUR_HARDWARE_VERSION
+carrier          = OPEN
+region           = US
+locale           = en-US
+# Channel: production, beta, staging
+channel          = production
+
+[http]
+# Motorola OTA server base URL (discovered by reverse-engineering)
+base_url         = https://otas.motorola.com
+# Request timeout in seconds
+timeout          = 30
+# HTTP/HTTPS proxy (leave empty to disable)
+proxy            =
+# User-Agent string sent to the OTA server (discovered by reverse-engineering)
+user_agent       = com.motorola.ccc.ota/1.0
+
+[paths]
+# Directory where downloaded OTA packages are saved
+output_dir           = ./output/firmware
+# Directory where release ZIPs are cached
+release_cache_dir    = ./output/release_cache
+# Directory for smali disassembly output
+smali_output_dir     = ./output/smali
+# Directory for JADX decompilation output
+jadx_output_dir      = ./output/jadx
+# Directory for Simplify deobfuscation output
+simplify_output_dir  = ./output/simplified
+
+[github]
+# Personal Access Token with 'repo' read scope (leave empty for public repos)
+token = YOUR_GITHUB_TOKEN_HERE
+owner = Uaemextop
+repo  = motofw
+
+[analysis]
+# Set to true to run Simplify deobfuscation (slow; requires Java 21)
+run_deobfuscation = true
+# Maximum smali files to process per APK (0 = no limit)
+smali_max_files   = 0
+# Set to true to dump capstone disassembly of .so .text sections
+dump_so_disasm    = false
