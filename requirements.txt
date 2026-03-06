@@ -1,2 +1,2 @@
 # Runtime dependencies for motofw
-# Add packages here as the project develops.
+httpx>=0.27

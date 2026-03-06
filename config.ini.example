@@ -1,0 +1,82 @@
+# =============================================================================
+# motofw configuration — copy to config.ini and fill in your values
+# =============================================================================
+# SECURITY: config.ini is git-ignored and must NEVER be committed.
+
+[server]
+# Motorola OTA update server hostname (from CDSUtils.smali evidence)
+url = moto-cds.appspot.com
+
+# Endpoint base paths (from CDSUtils.smali evidence)
+check_path = cds/upgrade/1/check
+resources_path = cds/upgrade/1/resources
+state_path = cds/upgrade/1/state
+
+# Request context — always "ota" per CDSUtils.smali
+context = ota
+
+# HTTP timeout in seconds
+timeout = 60
+
+# Retry back-off delays in milliseconds (comma-separated)
+# Evidence: 5000, 15000, 30000 ms from smali constants
+retry_delays_ms = 5000,15000,30000
+
+[device]
+# --- deviceInfo fields ---
+manufacturer = motorola
+hardware = lamu
+brand = motorola
+model = moto g05
+product = lamul_g
+os = Android
+os_version = 15
+country = MX
+region = MX
+language = es
+user_language = es_MX
+
+# --- extraInfo fields ---
+client_identity = motorola-ota-client-app
+carrier =
+bootloader_version =
+fingerprint = motorola/lamul_g/lamul:15/VVTA35.51-28-15/bd4d30:user/release-keys
+radio_version =
+build_tags = release-keys
+build_type = user
+build_device = lamul
+build_id = VVTA35.51-28-15
+build_display_id = VVTA35.51-28-15
+build_incremental_version =
+release_version = 15
+ota_source_sha1 = 23d670d5d06f351
+network = wifi
+apk_version = 3500094
+provisioned_time = 0
+incremental_version = 0
+additional_info =
+user_location = Non-CN
+bootloader_status = locked
+device_rooted = false
+is_4gb_ram = false
+device_chipset =
+
+# --- identityInfo fields ---
+serial_number = ZY32LNRW97
+
+# --- IMEI / SIM fields (optional, from BuildPropReader.smali) ---
+imei = 359488357396203
+imei2 =
+mccmnc =
+mccmnc2 =
+
+[identity]
+# How the device identifies itself to the server
+id_type = serialNumber
+
+[download]
+# Directory where downloaded firmware files are saved
+output_dir = output
+
+# Whether to verify MD5 checksums after download
+verify_checksum = true
