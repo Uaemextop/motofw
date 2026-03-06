@@ -214,3 +214,9 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Downloaded release log ZIPs
+*.zip
+
+# Firmware files
+firmware/

@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "motofw"
+version = "0.1.0"
+description = "Query and download OTA firmware updates from Motorola update servers"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.11"
+dependencies = [
+    "requests>=2.31.0",
+    "urllib3>=2.0.0",
+]
+
+[project.scripts]
+motofw = "motofw.__main__:main"
+
+[tool.setuptools.packages.find]
+include = ["motofw*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "live: tests that make live HTTP calls to Motorola servers (deselect with '-m \"not live\"')",
+]
