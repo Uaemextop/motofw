@@ -43,11 +43,15 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install -y curl wget unzip zip git
 
-      # ── 4. Node.js ────────────────────────────────────────────────────────
+      # ── 4. Node.js (provides npm and npx) ────────────────────────────────
       - name: Set up Node.js (LTS)
         uses: actions/setup-node@v4
         with:
           node-version: "lts/*"
+
+      # ── 4b. uv / uvx ──────────────────────────────────────────────────────
+      - name: Install uv (provides uv and uvx)
+        run: pip install uv
 
       # ── 5. Eclipse Temurin JDK 21 ─────────────────────────────────────────
       - name: Set up Eclipse Temurin JDK 21
@@ -147,6 +151,10 @@ jobs:
           echo "=== Python ===" && python --version
           echo "=== pip    ===" && pip --version
           echo "=== Node   ===" && node --version
+          echo "=== npm    ===" && npm --version
+          echo "=== npx    ===" && npx --version
+          echo "=== uv     ===" && uv --version
+          echo "=== uvx    ===" && uvx --version
           echo "=== Java   ===" && java -version
           echo "=== curl   ===" && curl --version | head -1
           echo "=== wget   ===" && wget --version | head -1
