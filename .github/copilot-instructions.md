@@ -107,12 +107,11 @@ motofw/
 │   └── api-reverse-engineering.md ← reverse-engineered OTA API documentation
 │
 ├── tests/                        ← pytest test suite
-├── config.ini                    ← gitignored; user config (copy from .example)
-├── config.ini.example            ← committed template with placeholder values
+├── config.ini                    ← gitignored; fill in your real values
 ├── requirements.txt
 ├── requirements-dev.txt
 └── README.md
 ```
 
-> **Note:** `source_code/`, `config.ini`, `output/`, and all smali/JADX
-> output directories are excluded from version control via `.gitignore`.
+> **Note:** `source_code/`, `config.ini`, and `output/` are excluded from
+> version control via `.gitignore`.

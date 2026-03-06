@@ -1,7 +1,7 @@
 # Cloned source code used for analysis (provisioned by Copilot setup steps)
 source_code/
 
-# User-specific configuration (copy config.ini.example to config.ini)
+# User-specific configuration (never committed — fill in your real values)
 config.ini
 
 # Analysis output directories
