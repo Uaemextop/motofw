@@ -13,7 +13,7 @@ on:
 jobs:
   copilot-setup-steps:
     # GitHub Enterprise self-hosted runner with label "mp4"
-    runs-on: [self-hosted, mp4]
+    runs-on: mp4
 
     permissions:
       contents: read
