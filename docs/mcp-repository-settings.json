@@ -1,0 +1,28 @@
+{
+  "mcpServers": {
+    "fetch": {
+      "type": "local",
+      "command": "python",
+      "args": ["-m", "mcp_server_fetch"],
+      "tools": ["*"]
+    },
+    "filesystem": {
+      "type": "local",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/home/runner/work/motofw/motofw"],
+      "tools": ["*"]
+    },
+    "memory": {
+      "type": "local",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"],
+      "tools": ["*"]
+    },
+    "sequential-thinking": {
+      "type": "local",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"],
+      "tools": ["*"]
+    }
+  }
+}
