@@ -11,8 +11,8 @@ tools: ["execute", "read", "edit", "search",
 mcp-servers:
   fetch:
     type: local
-    command: npx
-    args: ["-y", "@modelcontextprotocol/server-fetch"]
+    command: python
+    args: ["-m", "mcp_server_fetch"]
     tools: ["*"]
   filesystem:
     type: local
