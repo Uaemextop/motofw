@@ -1,0 +1,27 @@
+# Motofw Configuration File
+# Copy this file to config.ini and customize as needed
+
+[api]
+# API endpoints by region
+production_host = moto-cds.appspot.com
+staging_host = moto-cds-staging.appspot.com
+prc_host = moto-cds.svcmot.cn
+prc_dev_host = ota-cn-sdc.blurdev.com
+
+# API endpoint paths
+check_update_endpoint = /check
+download_descriptor_endpoint = /descriptor
+
+[http]
+# HTTP settings
+timeout = 30
+retries = 3
+use_https = true
+
+# Proxy settings (optional)
+# Uncomment and set if using HTTP proxy
+# proxy_host = proxy.example.com
+# proxy_port = 8080
+
+# User agent
+user_agent = motofw/0.1.0 (Python; OTA Client)
