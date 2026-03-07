@@ -72,7 +72,13 @@ def get_int(
 ) -> int:
     """Retrieve an integer from *cp* with a fallback."""
     raw = get_value(cp, section, key, fallback)
-    return int(raw) if raw else 0
+    if not raw:
+        return 0
+    try:
+        return int(raw)
+    except ValueError:
+        logger.warning("Invalid integer for [%s] %s = %r, using 0", section, key, raw)
+        return 0
 
 
 def get_bool(

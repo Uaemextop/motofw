@@ -51,7 +51,7 @@ build_display_id = VVTA35.51-100
 build_incremental_version =
 release_version = 15
 # Context key — from `getprop ro.mot.build.guid`
-# Use an older sha1 to trigger an update check that finds a newer build
+# This is the sha1 for VVTA35.51-100, which has a known update to VVTAS35.51-100-3
 ota_source_sha1 = 190325d96009ac5
 network = wifi
 apk_version = 3500094

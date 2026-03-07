@@ -45,8 +45,9 @@ def build_download_headers(
     offset:
         Resume offset in bytes.  When > 0 a ``Range`` header is added.
     etag:
-        ETag from a previous partial response.  When set together with
-        *offset* an ``If-Match`` header is added.
+        ETag from a previous partial response.  Only used when *offset*
+        is > 0 — adds an ``If-Match`` header so the server rejects the
+        resume if the file changed.
     """
     merged = dict(DOWNLOAD_HEADERS)
     if extra:

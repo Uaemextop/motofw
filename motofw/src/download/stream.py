@@ -36,6 +36,7 @@ def stream_to_file(
     total = int(response.headers.get("content-length", 0))
     downloaded = 0
     md5 = hashlib.md5()
+    last_pct = -10
 
     try:
         with dest.open("wb") as fh:
@@ -44,7 +45,10 @@ def stream_to_file(
                 md5.update(chunk)
                 downloaded += len(chunk)
                 if total:
-                    logger.debug("%.1f%% (%d/%d)", downloaded * 100 / total, downloaded, total)
+                    pct = downloaded * 100 / total
+                    if pct - last_pct >= 10:
+                        logger.debug("%.0f%% (%d/%d)", pct, downloaded, total)
+                        last_pct = pct
     finally:
         response.close()
 
