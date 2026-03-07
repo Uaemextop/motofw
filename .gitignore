@@ -4,6 +4,9 @@ source_code/
 # User-specific configuration (never committed — fill in your real values)
 config.ini
 
+# Device-specific identity file (never committed — contains IMEI, serial, etc.)
+device.ini
+
 # Analysis output directories
 output/
 

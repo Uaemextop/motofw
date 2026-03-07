@@ -61,6 +61,13 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Path to config.ini (default: auto-detect).",
     )
     parser.add_argument(
+        "-d",
+        "--device",
+        type=Path,
+        default=None,
+        help="Path to device.ini with device-specific parameters (default: auto-detect).",
+    )
+    parser.add_argument(
         "-v",
         "--verbose",
         action="count",
@@ -136,6 +143,12 @@ def _apply_overrides(
 
 def _cmd_query(cfg: Config) -> int:
     """Execute the ``query`` sub-command."""
+    logger.info(
+        "Querying server for device build_id=%s ota_source_sha1=%s serial=%s",
+        cfg.build_id,
+        cfg.ota_source_sha1,
+        cfg.serial_number,
+    )
     with OTAClient(cfg) as client:
         resp = check_update(cfg, client=client)
 
@@ -168,27 +181,52 @@ def _cmd_query(cfg: Config) -> int:
 def _cmd_download(cfg: Config) -> int:
     """Execute the ``download`` sub-command."""
     with OTAClient(cfg) as client:
-        logger.info("Querying for available update …")
+        logger.info(
+            "Querying for available update (build_id=%s, ota_source_sha1=%s) …",
+            cfg.build_id,
+            cfg.ota_source_sha1,
+        )
         resp = check_update(cfg, client=client)
 
         if not resp.proceed:
-            logger.info("No update available.")
-            sys.stdout.write("No update available.\n")
+            sys.stdout.write(
+                f"No update available for build {cfg.build_id} "
+                f"(contextKey={cfg.ota_source_sha1}).\n"
+                f"Server says poll again in {resp.poll_after_seconds} seconds.\n"
+            )
             return 0
 
         if not resp.content_resources:
             # Try the resources endpoint to get download URLs
             logger.info("No resources in check response; fetching via /resources …")
             if resp.tracking_id:
-                get_resources(
+                res_data = get_resources(
                     cfg,
                     tracking_id=resp.tracking_id,
+                    content_timestamp=resp.content.size if resp.content else 0,
                     client=client,
                 )
+                # Parse contentResources from the resources response
+                from motofw.parser import parse_content_resources
+                resources = parse_content_resources(res_data.get("contentResources"))
+                if resources:
+                    resp.content_resources = resources
+                else:
+                    sys.stdout.write("Update found but no download URL available.\n")
+                    return 1
             else:
                 logger.warning("No tracking ID — cannot fetch resources")
                 sys.stdout.write("Update found but no download URL available.\n")
                 return 1
+
+        if resp.content:
+            sys.stdout.write(
+                f"Update available: {resp.content.source_display_version} → "
+                f"{resp.content.display_version}\n"
+                f"Size: {resp.content.size:,} bytes  "
+                f"MD5: {resp.content.md5_checksum}\n"
+                f"Type: {resp.content.update_type}\n"
+            )
 
         dest = download_update(cfg, resp, client=client)
         sys.stdout.write(f"Downloaded: {dest}\n")
@@ -217,7 +255,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         parser.print_help()
         return 1
 
-    cfg = load_config(args.config)
+    cfg = load_config(args.config, device_path=args.device)
 
     # Apply any CLI overrides
     override_kwargs: dict = {}
