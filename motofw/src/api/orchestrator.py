@@ -6,7 +6,7 @@ import logging
 from typing import Any, Dict, Optional
 
 from motofw.src.api.body import check_body, resources_body
-from motofw.src.api.response import parse_check_response, parse_content_resources
+from motofw.src.api.response import parse_check_response, parse_resources_response
 from motofw.src.api.session import OTASession
 from motofw.src.api.urls import check_url, resources_url, state_url
 from motofw.src.config.settings import Config
@@ -119,9 +119,7 @@ def download_firmware(
             tracking_id=check_resp.tracking_id,
             session=session,
         )
-        check_resp.content_resources = parse_content_resources(
-            data.get("contentResources")
-        )
+        check_resp.content_resources = parse_resources_response(data)
         return check_resp
     finally:
         if own:

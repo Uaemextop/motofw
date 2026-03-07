@@ -49,6 +49,35 @@ def parse_content_resources(
     return [parse_content_resource(r) for r in items]
 
 
+def parse_resources_response(data: Dict[str, Any]) -> List[ContentResource]:
+    """Parse a ``/resources`` endpoint response.
+
+    The resources endpoint returns ``{proceed, wifiUrl, wifiHeaders,
+    cellUrl, cellHeaders, adminApnUrl, adminApnHeaders, trackingId}``
+    per ``ContentResourcesBuilder.smali`` — a flat structure with separate
+    URL/header pairs, **not** a ``contentResources`` array.
+    """
+    if not data.get("proceed", False):
+        return []
+
+    results: List[ContentResource] = []
+    for tag, url_key, hdr_key in (
+        ("WIFI", "wifiUrl", "wifiHeaders"),
+        ("CELL", "cellUrl", "cellHeaders"),
+        ("ADMIN_APN", "adminApnUrl", "adminApnHeaders"),
+    ):
+        url = data.get(url_key, "")
+        if url:
+            headers = data.get(hdr_key)
+            results.append(ContentResource(
+                url=url,
+                headers=headers,
+                tags=[tag],
+                url_ttl_seconds=0,
+            ))
+    return results
+
+
 def parse_check_response(data: Dict[str, Any]) -> CheckResponse:
     """Parse a full ``/check`` endpoint response."""
     content_raw = data.get("content")

@@ -15,7 +15,7 @@ from motofw.src.api.headers import (
     build_user_agent,
 )
 from motofw.src.api.orchestrator import check_update
-from motofw.src.api.response import parse_check_response, parse_content_resources
+from motofw.src.api.response import parse_check_response, parse_content_resources, parse_resources_response
 from motofw.src.api.urls import check_url, resources_url, state_url
 from motofw.src.config.settings import Config
 
@@ -101,6 +101,34 @@ class TestResponse:
 
     def test_parse_content_resources_none(self):
         assert parse_content_resources(None) == []
+
+    def test_parse_resources_response_with_urls(self):
+        """Parse /resources endpoint per ContentResourcesBuilder.smali."""
+        data = {
+            "proceed": True,
+            "wifiUrl": "https://dlmgr.gtm.svcmot.com/dl/fw.zip",
+            "wifiHeaders": {"X-Token": "abc"},
+            "cellUrl": "https://dlmgr.gtm.svcmot.com/dl/fw-cell.zip",
+            "cellHeaders": None,
+            "trackingId": "TRK-1",
+        }
+        resources = parse_resources_response(data)
+        assert len(resources) == 2
+        assert resources[0].url == "https://dlmgr.gtm.svcmot.com/dl/fw.zip"
+        assert resources[0].headers == {"X-Token": "abc"}
+        assert resources[0].tags == ["WIFI"]
+        assert resources[1].url == "https://dlmgr.gtm.svcmot.com/dl/fw-cell.zip"
+        assert resources[1].tags == ["CELL"]
+
+    def test_parse_resources_response_not_proceed(self):
+        """Resources with proceed=false returns empty list."""
+        data = {"proceed": False, "wifiUrl": "https://example.com/fw.zip"}
+        assert parse_resources_response(data) == []
+
+    def test_parse_resources_response_empty_urls(self):
+        """Resources with proceed=true but no URLs returns empty list."""
+        data = {"proceed": True}
+        assert parse_resources_response(data) == []
 
 
 class TestOrchestrator:
