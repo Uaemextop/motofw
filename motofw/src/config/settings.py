@@ -83,6 +83,20 @@ class Config:
     device_rooted: str = DEVICE_DEFAULTS["device_rooted"]
     is_4gb_ram: bool = False
     device_chipset: str = DEVICE_DEFAULTS["device_chipset"]
+    security_version: str = DEVICE_DEFAULTS["security_version"]
+    mot_version: int = int(DEVICE_DEFAULTS["mot_version"])
+    enterprise_edition: bool = False
+    virtual_ab_enabled: bool = False
+    vital_update: bool = False
+    hw_storage: str = DEVICE_DEFAULTS["hw_storage"]
+    hw_ram: str = DEVICE_DEFAULTS["hw_ram"]
+    hw_esim: str = DEVICE_DEFAULTS["hw_esim"]
+    product_wave: str = DEVICE_DEFAULTS["product_wave"]
+    oem_product: str = DEVICE_DEFAULTS["oem_product"]
+    system_product: str = DEVICE_DEFAULTS["system_product"]
+    product_increment: str = DEVICE_DEFAULTS["product_increment"]
+    verity_mode: str = DEVICE_DEFAULTS["verity_mode"]
+    system_verified: str = DEVICE_DEFAULTS["system_verified"]
 
     # identity
     serial_number: str = IDENTITY_DEFAULTS["serial_number"]
@@ -159,6 +173,20 @@ def load_config(
         device_rooted=get_value(dev, "device", "device_rooted", DEVICE_DEFAULTS["device_rooted"]),
         is_4gb_ram=get_bool(dev, "device", "is_4gb_ram", DEVICE_DEFAULTS["is_4gb_ram"]),
         device_chipset=get_value(dev, "device", "device_chipset", DEVICE_DEFAULTS["device_chipset"]),
+        security_version=get_value(dev, "device", "security_version", DEVICE_DEFAULTS["security_version"]),
+        mot_version=get_int(dev, "device", "mot_version", DEVICE_DEFAULTS["mot_version"]),
+        enterprise_edition=get_bool(dev, "device", "enterprise_edition", DEVICE_DEFAULTS["enterprise_edition"]),
+        virtual_ab_enabled=get_bool(dev, "device", "virtual_ab_enabled", DEVICE_DEFAULTS["virtual_ab_enabled"]),
+        vital_update=get_bool(dev, "device", "vital_update", DEVICE_DEFAULTS["vital_update"]),
+        hw_storage=get_value(dev, "device", "hw_storage", DEVICE_DEFAULTS["hw_storage"]),
+        hw_ram=get_value(dev, "device", "hw_ram", DEVICE_DEFAULTS["hw_ram"]),
+        hw_esim=get_value(dev, "device", "hw_esim", DEVICE_DEFAULTS["hw_esim"]),
+        product_wave=get_value(dev, "device", "product_wave", DEVICE_DEFAULTS["product_wave"]),
+        oem_product=get_value(dev, "device", "oem_product", DEVICE_DEFAULTS["oem_product"]),
+        system_product=get_value(dev, "device", "system_product", DEVICE_DEFAULTS["system_product"]),
+        product_increment=get_value(dev, "device", "product_increment", DEVICE_DEFAULTS["product_increment"]),
+        verity_mode=get_value(dev, "device", "verity_mode", DEVICE_DEFAULTS["verity_mode"]),
+        system_verified=get_value(dev, "device", "system_verified", DEVICE_DEFAULTS["system_verified"]),
         serial_number=get_value(dev, "identity", "serial_number", IDENTITY_DEFAULTS["serial_number"]),
         imei=get_value(dev, "identity", "imei", IDENTITY_DEFAULTS["imei"]),
         imei2=get_value(dev, "identity", "imei2", IDENTITY_DEFAULTS["imei2"]),

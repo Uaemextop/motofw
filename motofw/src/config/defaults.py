@@ -59,6 +59,21 @@ DEVICE_DEFAULTS: dict[str, str] = {
     "device_rooted": "false",
     "is_4gb_ram": "false",
     "device_chipset": "",
+    # Fields from BuildPropReader.smali lines 1006–1157
+    "security_version": "",
+    "mot_version": "0",
+    "enterprise_edition": "false",
+    "virtual_ab_enabled": "false",
+    "vital_update": "false",
+    "hw_storage": "",
+    "hw_ram": "",
+    "hw_esim": "",
+    "product_wave": "",
+    "oem_product": "",
+    "system_product": "",
+    "product_increment": "",
+    "verity_mode": "",
+    "system_verified": "",
 }
 
 IDENTITY_DEFAULTS: dict[str, str] = {

@@ -70,6 +70,36 @@ device_rooted = false
 is_4gb_ram = false
 device_chipset =
 
+# --- additional extraInfo fields (BuildPropReader.smali lines 1006–1157) ---
+# ro.build.version.security_patch (line 1098) — security patch level string
+security_version =
+# ro.mot.version (line 1080) — integer Motorola version code
+mot_version = 0
+# ro.enterpriseedition (line 1110) — enterprise edition flag
+enterprise_edition = false
+# ro.virtual_ab.enabled (line 1122) — Virtual A/B update support
+virtual_ab_enabled = false
+# BotaSettings vitalUpdate (line 1157) — vital/critical update flag
+vital_update = false
+# ro.vendor.hw.storage (line 1006) — storage capacity string
+hw_storage =
+# ro.vendor.hw.ram (line 1014) — RAM capacity string
+hw_ram =
+# ro.vendor.hw.esim (line 1022) — eSIM support string
+hw_esim =
+# ro.mot.product_wave (line 1030) — product wave identifier
+product_wave =
+# ro.mot.build.oem.product (line 1038) — OEM product name
+oem_product =
+# ro.mot.build.system.product (line 1046) — system product name
+system_product =
+# ro.mot.build.product.increment (line 1054) — product increment string
+product_increment =
+# ro.boot.veritymode (line 1062) — dm-verity mode
+verity_mode =
+# partition.system.verified (line 1070) — system partition verified hash
+system_verified =
+
 [identity]
 # --- identity fields ---
 serial_number = ZY32LNRW97

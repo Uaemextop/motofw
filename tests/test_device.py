@@ -38,6 +38,37 @@ class TestExtraInfo:
         d = ei.to_dict()
         assert d["imei"] == "123456789"
 
+    def test_smali_extra_fields_present(self):
+        """All fields from BuildPropReader.smali lines 1006–1157 must appear."""
+        d = ExtraInfo().to_dict()
+        smali_keys = [
+            "securityVersion",
+            "ro.mot.version",
+            "ro.enterpriseedition",
+            "ro.virtual_ab.enabled",
+            "vitalUpdate",
+            "ro.vendor.hw.storage",
+            "ro.vendor.hw.ram",
+            "ro.vendor.hw.esim",
+            "ro.mot.product_wave",
+            "ro.mot.build.oem.product",
+            "ro.mot.build.system.product",
+            "ro.mot.build.product.increment",
+            "ro.boot.veritymode",
+            "partition.system.verified",
+        ]
+        for key in smali_keys:
+            assert key in d, f"Missing smali field: {key}"
+
+    def test_smali_extra_fields_types(self):
+        """Verify correct types for smali-sourced fields."""
+        d = ExtraInfo(security_version="2025-01-01", mot_version=5).to_dict()
+        assert d["securityVersion"] == "2025-01-01"
+        assert d["ro.mot.version"] == 5
+        assert isinstance(d["ro.enterpriseedition"], bool)
+        assert isinstance(d["ro.virtual_ab.enabled"], bool)
+        assert isinstance(d["vitalUpdate"], bool)
+
 
 class TestIdentityInfo:
     def test_to_dict(self):

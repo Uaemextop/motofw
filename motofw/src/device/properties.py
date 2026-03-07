@@ -77,6 +77,21 @@ class ExtraInfo:
     device_rooted: str = "false"
     is_4gb_ram: bool = False
     device_chipset: str = ""
+    # --- Fields from BuildPropReader.smali lines 1006–1157 ---
+    security_version: str = ""  # ro.build.version.security_patch (line 1098)
+    mot_version: int = 0  # ro.mot.version (line 1080)
+    enterprise_edition: bool = False  # ro.enterpriseedition (line 1110)
+    virtual_ab_enabled: bool = False  # ro.virtual_ab.enabled (line 1122)
+    vital_update: bool = False  # BotaSettings vitalUpdate (line 1157)
+    hw_storage: str = ""  # ro.vendor.hw.storage (line 1006)
+    hw_ram: str = ""  # ro.vendor.hw.ram (line 1014)
+    hw_esim: str = ""  # ro.vendor.hw.esim (line 1022)
+    product_wave: str = ""  # ro.mot.product_wave (line 1030)
+    oem_product: str = ""  # ro.mot.build.oem.product (line 1038)
+    system_product: str = ""  # ro.mot.build.system.product (line 1046)
+    product_increment: str = ""  # ro.mot.build.product.increment (line 1054)
+    verity_mode: str = ""  # ro.boot.veritymode (line 1062)
+    system_verified: str = ""  # partition.system.verified (line 1070)
     imei: str = ""
     imei2: str = ""
     mccmnc: str = ""
@@ -110,6 +125,20 @@ class ExtraInfo:
             "deviceRooted": self.device_rooted,
             "is4GBRam": self.is_4gb_ram,
             "deviceChipset": self.device_chipset,
+            "securityVersion": self.security_version,
+            "ro.mot.version": self.mot_version,
+            "ro.enterpriseedition": self.enterprise_edition,
+            "ro.virtual_ab.enabled": self.virtual_ab_enabled,
+            "vitalUpdate": self.vital_update,
+            "ro.vendor.hw.storage": self.hw_storage,
+            "ro.vendor.hw.ram": self.hw_ram,
+            "ro.vendor.hw.esim": self.hw_esim,
+            "ro.mot.product_wave": self.product_wave,
+            "ro.mot.build.oem.product": self.oem_product,
+            "ro.mot.build.system.product": self.system_product,
+            "ro.mot.build.product.increment": self.product_increment,
+            "ro.boot.veritymode": self.verity_mode,
+            "partition.system.verified": self.system_verified,
         }
         if self.imei:
             d["imei"] = self.imei
