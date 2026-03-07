@@ -8,10 +8,9 @@ is willing to serve.
 
 from __future__ import annotations
 
-import copy
 import logging
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from motofw.src.api.body import check_body
 from motofw.src.api.response import parse_check_response
@@ -25,7 +24,7 @@ logger = logging.getLogger(__name__)
 # ── Known update chain for moto g05 (lamul_g / lamu) ──────────────
 # Extracted from V1 release logs.
 
-KNOWN_BUILDS: List[Dict[str, str]] = [
+KNOWN_BUILDS: list[dict[str, str]] = [
     {
         "build_id": "VVTA35.51-28-15",
         "sha1": "23d670d5d06f351",
@@ -70,12 +69,12 @@ class ScanResult:
 class ScanReport:
     """Full results of a scan across all known builds."""
 
-    results: List[ScanResult] = field(default_factory=list)
-    errors: List[str] = field(default_factory=list)
+    results: list[ScanResult] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
     builds_queried: int = 0
 
 
-def _make_cfg_for_build(cfg: Config, build: Dict[str, str]) -> Config:
+def _make_cfg_for_build(cfg: Config, build: dict[str, str]) -> Config:
     """Return a modified Config targeting *build*."""
     kw = {f.name: getattr(cfg, f.name) for f in cfg.__dataclass_fields__.values()}
     kw["ota_source_sha1"] = build["sha1"]
@@ -89,7 +88,7 @@ def scan_updates(
     cfg: Config,
     *,
     session: Optional[OTASession] = None,
-    builds: Optional[List[Dict[str, str]]] = None,
+    builds: Optional[list[dict[str, str]]] = None,
 ) -> ScanReport:
     """Query the server for each known build and collect available updates.
 
@@ -127,7 +126,7 @@ def scan_updates(
                 body = check_body(build_cfg)
                 path = check_url(build_cfg)
                 resp_http = session.post(path, json_body=body)
-                raw: Dict[str, Any] = resp_http.json()
+                raw: dict[str, Any] = resp_http.json()
                 resp = parse_check_response(raw)
 
                 if resp.proceed and resp.content:

@@ -6,7 +6,7 @@ import json
 import logging
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Optional, Sequence
 
 from motofw.src.api.body import check_body
 from motofw.src.api.headers import DEFAULT_HEADERS
@@ -57,7 +57,7 @@ def _build_base_url(cfg: Config) -> str:
     return f"https://{cfg.server_url}"
 
 
-def _dump_curl(cfg: Config, body: Dict[str, Any]) -> None:
+def _dump_curl(cfg: Config, body: dict[str, Any]) -> None:
     """Print the request body and an equivalent curl command to stderr."""
     path = check_url(cfg).lstrip("/")
     url = f"{_build_base_url(cfg)}/{path}"
@@ -86,7 +86,7 @@ def _cmd_query(cfg: Config, *, dump_request: bool = False, raw: bool = False) ->
 
     with OTASession(cfg) as ses:
         resp_http = ses.post(check_url(cfg), json_body=body)
-        raw_json: Dict[str, Any] = resp_http.json()
+        raw_json: dict[str, Any] = resp_http.json()
 
     if raw:
         sys.stdout.write(json.dumps(raw_json, indent=2) + "\n")

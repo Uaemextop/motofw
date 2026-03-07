@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import sys
-from typing import TYPE_CHECKING, Any, Dict
+from typing import TYPE_CHECKING, Any
 
 from motofw.src.utils.models import CheckResponse
 
@@ -12,14 +12,14 @@ if TYPE_CHECKING:
     from motofw.src.api.scanner import ScanReport
 
 
-def print_json(data: Dict[str, Any]) -> None:
+def print_json(data: dict[str, Any]) -> None:
     """Write *data* as pretty-printed JSON to stdout."""
     sys.stdout.write(json.dumps(data, indent=2) + "\n")
 
 
 def print_query_result(resp: CheckResponse) -> None:
     """Print a human-readable summary of a check response."""
-    out: Dict[str, Any] = {
+    out: dict[str, Any] = {
         "proceed": resp.proceed,
         "context": resp.context,
         "contextKey": resp.context_key,
