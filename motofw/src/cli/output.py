@@ -4,9 +4,12 @@ from __future__ import annotations
 
 import json
 import sys
-from typing import Any, Dict
+from typing import TYPE_CHECKING, Any, Dict
 
 from motofw.src.utils.models import CheckResponse
+
+if TYPE_CHECKING:
+    from motofw.src.api.scanner import ScanReport
 
 
 def print_json(data: Dict[str, Any]) -> None:
@@ -57,6 +60,19 @@ def print_update_info(
         f"Size: {size:,} bytes  MD5: {md5}\n"
         f"Type: {update_type}\n"
     )
+
+
+def print_scan_results(report: "ScanReport") -> None:
+    """Print a formatted table of all discovered updates."""
+    sys.stdout.write(f"Found {len(report.results)} update(s) across {report.builds_queried} builds:\n\n")
+    sys.stdout.write(f"{'#':>3}  {'Source Build':<22} {'Target Build':<22} {'Type':<6} {'Size':>12}  {'MD5'}\n")
+    sys.stdout.write(f"{'─' * 3}  {'─' * 22} {'─' * 22} {'─' * 6} {'─' * 12}  {'─' * 32}\n")
+    for idx, r in enumerate(report.results, 1):
+        size_mb = f"{r.size / (1024 * 1024):.1f} MB"
+        sys.stdout.write(
+            f"{idx:>3}  {r.source_build:<22} {r.target_build:<22} {r.update_type:<6} {size_mb:>12}  {r.md5}\n"
+        )
+    sys.stdout.write("\n")
 
 
 def print_downloaded(path: str) -> None:

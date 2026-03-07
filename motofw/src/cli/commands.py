@@ -6,12 +6,13 @@ import json
 import logging
 import sys
 from pathlib import Path
-from typing import Any, Dict, Optional, Sequence
+from typing import Any, Dict, List, Optional, Sequence
 
 from motofw.src.api.body import check_body
 from motofw.src.api.headers import DEFAULT_HEADERS
 from motofw.src.api.orchestrator import check_update, download_firmware, get_resources
 from motofw.src.api.response import parse_check_response, parse_content_resources
+from motofw.src.api.scanner import ScanReport, ScanResult, scan_updates
 from motofw.src.api.session import OTASession
 from motofw.src.api.urls import check_url
 from motofw.src.cli.log import setup_logging
@@ -20,6 +21,7 @@ from motofw.src.cli.output import (
     print_error,
     print_no_update,
     print_query_result,
+    print_scan_results,
     print_update_info,
 )
 from motofw.src.cli.parser import build_parser
@@ -128,6 +130,101 @@ def _cmd_download(cfg: Config, *, dump_request: bool = False) -> int:
         return 0
 
 
+def _cmd_scan(cfg: Config, *, no_interactive: bool = False) -> int:
+    """Execute the ``scan`` sub-command — find all available OTAs and let user choose."""
+    sys.stdout.write("Scanning all known builds for available updates …\n")
+    sys.stdout.write(f"Device: {cfg.model} ({cfg.product}/{cfg.hardware})\n")
+    sys.stdout.write(f"Serial: {cfg.serial_number}  IMEI: {cfg.imei}\n\n")
+
+    with OTASession(cfg) as ses:
+        report = scan_updates(cfg, session=ses)
+
+    if report.errors:
+        for err in report.errors:
+            sys.stderr.write(f"Warning: {err}\n")
+
+    if not report.results:
+        sys.stdout.write(
+            f"No updates found across {report.builds_queried} builds queried.\n"
+            "The server may not be serving updates for this device/serial.\n"
+        )
+        return 0
+
+    print_scan_results(report)
+
+    if no_interactive:
+        return 0
+
+    # Interactive menu
+    return _interactive_download(cfg, report)
+
+
+def _interactive_download(cfg: Config, report: ScanReport) -> int:
+    """Present an interactive menu for choosing which update to download."""
+    results = report.results
+    sys.stdout.write("\n── Choose an update to download ──\n")
+    for idx, r in enumerate(results, 1):
+        size_mb = r.size / (1024 * 1024)
+        sys.stdout.write(
+            f"  [{idx}] {r.source_build} → {r.target_build}"
+            f"  ({r.update_type}, {size_mb:.1f} MB)\n"
+        )
+    sys.stdout.write(f"  [0] Exit without downloading\n\n")
+
+    while True:
+        try:
+            sys.stdout.write("Enter choice: ")
+            sys.stdout.flush()
+            raw_input = input().strip()
+        except (EOFError, KeyboardInterrupt):
+            sys.stdout.write("\nCancelled.\n")
+            return 0
+
+        if not raw_input:
+            continue
+        try:
+            choice = int(raw_input)
+        except ValueError:
+            sys.stdout.write("Please enter a number.\n")
+            continue
+
+        if choice == 0:
+            sys.stdout.write("Exiting.\n")
+            return 0
+        if 1 <= choice <= len(results):
+            break
+        sys.stdout.write(f"Please enter a number between 0 and {len(results)}.\n")
+
+    selected = results[choice - 1]
+    sys.stdout.write(
+        f"\nDownloading: {selected.source_build} → {selected.target_build}\n"
+    )
+
+    # Use the check_response from the scan which already has content info
+    resp = selected.check_response
+
+    if resp.content:
+        print_update_info(
+            resp.content.source_display_version,
+            resp.content.display_version,
+            resp.content.size,
+            resp.content.md5_checksum,
+            resp.content.update_type,
+        )
+
+    # Need to get resources if not already present
+    with OTASession(cfg) as ses:
+        resp = download_firmware(cfg, resp, session=ses)
+
+        if not resp.content_resources:
+            print_error("Update found but no download URL available.")
+            return 1
+
+        dest = download_update(cfg, resp, session=ses)
+        print_downloaded(str(dest))
+        return 0
+
+
 def main(argv: Optional[Sequence[str]] = None) -> int:
     """CLI entry point (registered in pyproject.toml)."""
     ap = build_parser()
@@ -160,5 +257,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         )
     if args.command == "download":
         return _cmd_download(cfg, dump_request=getattr(args, "dump_request", False))
+    if args.command == "scan":
+        return _cmd_scan(cfg, no_interactive=getattr(args, "no_interactive", False))
     ap.print_help()
     return 1

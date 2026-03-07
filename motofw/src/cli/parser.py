@@ -33,4 +33,11 @@ def build_parser() -> argparse.ArgumentParser:
     dp.add_argument("--no-verify", action="store_true", default=False, help="Skip MD5 check.")
     dp.add_argument("--dump-request", action="store_true", default=False, help="Print the request body and equivalent curl command.")
 
+    # scan
+    sp = sub.add_parser("scan", help="Scan all known builds for available OTA updates and choose which to download.")
+    sp.add_argument("--serial", default=None, help="Override serial number.")
+    sp.add_argument("-o", "--output-dir", type=Path, default=None, help="Save directory for downloads.")
+    sp.add_argument("--no-verify", action="store_true", default=False, help="Skip MD5 check.")
+    sp.add_argument("--no-interactive", action="store_true", default=False, help="Skip interactive menu, just list results.")
+
     return parser
