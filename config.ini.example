@@ -28,8 +28,8 @@ context = ota
 timeout = 60
 
 # Retry back-off delays in milliseconds (comma-separated)
-# Evidence: 5000, 15000, 30000 ms from smali constants
-retry_delays_ms = 5000,15000,30000
+# WebServiceThread.smali backOffValues: 2000,5000,15000,30000,60000,...
+retry_delays_ms = 2000,5000,15000,30000
 
 [device]
 # --- deviceInfo fields ---
@@ -71,7 +71,7 @@ is_4gb_ram = false
 device_chipset =
 
 [identity]
-# --- identityInfo fields ---
+# --- identity fields ---
 serial_number = ZY32LNRW97
 
 # --- IMEI / SIM fields (optional, from BuildPropReader.smali) ---

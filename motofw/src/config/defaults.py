@@ -12,7 +12,9 @@ SERVER_DEFAULTS: dict[str, str] = {
     "state_path": "cds/upgrade/1/state",
     "context": "ota",
     "timeout": "60",
-    "retry_delays_ms": "5000,15000,30000",
+    # WebServiceThread.smali backOffValues: "2000,5000,15000,30000,60000,..."
+    # Using the first 4 for CLI (full 9-value chain is too aggressive).
+    "retry_delays_ms": "2000,5000,15000,30000",
 }
 
 DOWNLOAD_DEFAULTS: dict[str, str] = {

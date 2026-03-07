@@ -1,4 +1,11 @@
-"""Low-level HTTP request execution with retry and back-off."""
+"""Low-level HTTP request execution with retry and back-off.
+
+Retry behaviour matches the Motorola OTA APK (WebServiceThread.smali):
+  - 5XX responses trigger automatic retry with backoff.
+  - 4XX responses are NOT retried (client error).
+  - Transport errors (connection refused, timeout) are retried.
+  - Backoff delays from smali: 2s, 5s, 15s, 30s, 60s, 5m, 10m, 10m, 10m.
+"""
 
 from __future__ import annotations
 
@@ -13,6 +20,20 @@ from motofw.src.api.headers import build_download_headers
 logger = logging.getLogger(__name__)
 
 
+def _is_retryable(exc: BaseException) -> bool:
+    """Return True if *exc* should trigger a retry.
+
+    Per WebServiceThread.smali (lines 279-293): only 5XX server errors
+    and transport-level failures are retried.  4XX client errors are not.
+    """
+    if isinstance(exc, httpx.HTTPStatusError):
+        code = exc.response.status_code
+        return 500 <= code <= 599
+    if isinstance(exc, httpx.TransportError):
+        return True
+    return False
+
+
 def post_with_retry(
     client: httpx.Client,
     path: str,
@@ -22,7 +43,7 @@ def post_with_retry(
     retry_delays_s: Optional[List[float]] = None,
     label: str = "",
 ) -> httpx.Response:
-    """POST *json_body* to *path* with automatic retries.
+    """POST *json_body* to *path* with automatic retries on 5XX / transport errors.
 
     Returns the first successful (2xx) response.  Raises the last
     exception when all attempts are exhausted.
@@ -42,7 +63,10 @@ def post_with_retry(
             return resp
         except (httpx.HTTPStatusError, httpx.TransportError) as exc:
             last_exc = exc
-            logger.warning("Attempt %d/%d failed: %s", idx + 1, len(attempts), exc)
+            if not _is_retryable(exc):
+                logger.warning("Non-retryable error: %s", exc)
+                raise
+            logger.warning("Attempt %d/%d failed (retryable): %s", idx + 1, len(attempts), exc)
 
     assert last_exc is not None
     raise last_exc
@@ -91,7 +115,10 @@ def stream_get(
             return resp
         except (httpx.HTTPStatusError, httpx.TransportError) as exc:
             last_exc = exc
-            logger.warning("Stream attempt %d/%d failed: %s", idx + 1, len(attempts), exc)
+            if not _is_retryable(exc):
+                logger.warning("Non-retryable stream error: %s", exc)
+                raise
+            logger.warning("Stream attempt %d/%d failed (retryable): %s", idx + 1, len(attempts), exc)
 
     assert last_exc is not None
     raise last_exc

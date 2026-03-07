@@ -47,7 +47,7 @@ class TestConfig:
     def test_defaults_without_files(self, default_config: Config):
         assert default_config.server_url == "moto-cds.appspot.com"
         assert default_config.timeout == 60
-        assert default_config.retry_delays_ms == [5000, 15000, 30000]
+        assert default_config.retry_delays_ms == [2000, 5000, 15000, 30000]
 
     def test_custom_config(self, custom_config: Config):
         assert custom_config.serial_number == "ZY32LNRW97"

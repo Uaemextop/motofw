@@ -44,7 +44,7 @@ class Config:
     state_path: str = SERVER_DEFAULTS["state_path"]
     context: str = SERVER_DEFAULTS["context"]
     timeout: int = int(SERVER_DEFAULTS["timeout"])
-    retry_delays_ms: List[int] = field(default_factory=lambda: [5000, 15000, 30000])
+    retry_delays_ms: List[int] = field(default_factory=lambda: [2000, 5000, 15000, 30000])
 
     # device / deviceInfo
     manufacturer: str = DEVICE_DEFAULTS["manufacturer"]

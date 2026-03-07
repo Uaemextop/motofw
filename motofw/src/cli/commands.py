@@ -292,8 +292,11 @@ def _cmd_discover(cfg: Config, *, triggered_by: str = "user", no_interactive: bo
         sys.stdout.write(f"  [{name}] {host} … ")
         sys.stdout.flush()
 
-        srv_kw = {f.name: getattr(cfg, f.name) for f in cfg.__dataclass_fields__.values()}
-        srv_kw["server_url"] = host
+        # Use shorter retries for discovery (2s, 5s) since we query 6 servers.
+        # WebServiceThread.smali backoff starts at 2s — we use the first two.
+        srv_cfg = _apply_overrides(cfg, server=name)
+        srv_kw = {f.name: getattr(srv_cfg, f.name) for f in srv_cfg.__dataclass_fields__.values()}
+        srv_kw["retry_delays_ms"] = [2000, 5000]
         srv_cfg = Config(**srv_kw)
 
         try:
