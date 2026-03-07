@@ -27,6 +27,15 @@ from motofw.src.cli.output import (
 from motofw.src.cli.parser import build_parser
 from motofw.src.config.options import CONFIGURABLE_PARAMS
 from motofw.src.config.settings import Config, load_config
+from motofw.src.device.adb import (
+    ADBError,
+    connect_wireless,
+    extract_device_info,
+    find_adb,
+    pair_wireless,
+    wait_for_device,
+    write_device_ini,
+)
 from motofw.src.download.manager import download_update
 
 logger = logging.getLogger("motofw")
@@ -350,5 +359,144 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             configure=getattr(args, "configure", False),
             triggered_by=triggered_by,
         )
+    if args.command == "settings":
+        return _cmd_settings(args)
     ap.print_help()
     return 1
+
+
+def _cmd_settings(args: Any) -> int:
+    """Execute the ``settings`` sub-command."""
+    settings_cmd = getattr(args, "settings_command", None)
+    if settings_cmd == "auto-settings-adb":
+        return _cmd_auto_settings_adb(output=args.output)
+    sys.stdout.write("Usage: motofw settings auto-settings-adb [-o device.ini]\n")
+    return 1
+
+
+def _cmd_auto_settings_adb(*, output: Path) -> int:
+    """Extract device properties via ADB and write device.ini.
+
+    Presents an interactive menu to choose USB or wireless ADB.
+    """
+    sys.stdout.write("\n── Auto Settings via ADB ──\n")
+    sys.stdout.write("Extract device properties and generate device.ini.\n\n")
+
+    try:
+        adb_path = find_adb()
+    except ADBError as exc:
+        print_error(str(exc))
+        return 1
+
+    sys.stdout.write(f"ADB found: {adb_path}\n\n")
+    sys.stdout.write("Connection method:\n")
+    sys.stdout.write("  [1] USB (device connected via USB cable)\n")
+    sys.stdout.write("  [2] Wireless (ADB over Wi-Fi / TCP)\n")
+    sys.stdout.write("  [0] Cancel\n\n")
+
+    while True:
+        try:
+            sys.stdout.write("Choice: ")
+            sys.stdout.flush()
+            raw = input().strip()
+        except (EOFError, KeyboardInterrupt):
+            sys.stdout.write("\nCancelled.\n")
+            return 0
+
+        if raw == "0":
+            sys.stdout.write("Cancelled.\n")
+            return 0
+        if raw in ("1", "2"):
+            break
+        sys.stdout.write("Please enter 0, 1, or 2.\n")
+
+    try:
+        if raw == "1":
+            # USB connection
+            wait_for_device(adb_path=adb_path)
+        else:
+            # Wireless connection
+            _setup_wireless_adb(adb_path=adb_path)
+
+        sys.stdout.write("\nExtracting device properties …\n")
+        info = extract_device_info(adb_path=adb_path)
+
+        # Display extracted info
+        sys.stdout.write(f"\n── Extracted Device Info ──\n")
+        sys.stdout.write(f"  Model:        {info.get('brand', '')} {info.get('model', '')}\n")
+        sys.stdout.write(f"  Product:      {info.get('product', '')}\n")
+        sys.stdout.write(f"  Fingerprint:  {info.get('fingerprint', '')}\n")
+        sys.stdout.write(f"  Build ID:     {info.get('build_id', '')}\n")
+        sys.stdout.write(f"  OTA SHA1:     {info.get('ota_source_sha1', '')}\n")
+        sys.stdout.write(f"  Serial:       {info.get('serial_number', '')}\n")
+        sys.stdout.write(f"  IMEI:         {info.get('imei', '')}\n")
+        if info.get("imei2"):
+            sys.stdout.write(f"  IMEI2:        {info.get('imei2', '')}\n")
+        sys.stdout.write(f"  Bootloader:   {info.get('bootloader_status', '')}\n")
+        sys.stdout.write(f"  Android:      {info.get('os_version', '')}\n")
+
+        dest = write_device_ini(info, output)
+        sys.stdout.write(f"\n✓ device.ini written to: {dest}\n")
+        return 0
+
+    except ADBError as exc:
+        print_error(str(exc))
+        return 1
+
+
+def _setup_wireless_adb(*, adb_path: str) -> None:
+    """Interactive wireless ADB setup with optional pairing."""
+    sys.stdout.write("\n── Wireless ADB Setup ──\n")
+    sys.stdout.write("On your device: Settings → Developer Options → Wireless debugging\n\n")
+    sys.stdout.write("Is the device already paired with this computer?\n")
+    sys.stdout.write("  [1] Yes — just connect\n")
+    sys.stdout.write("  [2] No — pair first\n\n")
+
+    while True:
+        try:
+            sys.stdout.write("Choice: ")
+            sys.stdout.flush()
+            raw = input().strip()
+        except (EOFError, KeyboardInterrupt):
+            raise ADBError("Cancelled by user.")
+        if raw in ("1", "2"):
+            break
+        sys.stdout.write("Please enter 1 or 2.\n")
+
+    if raw == "2":
+        # Pairing flow
+        sys.stdout.write("\nOn device: tap 'Pair device with pairing code'\n")
+        try:
+            sys.stdout.write("Pairing IP address: ")
+            sys.stdout.flush()
+            pair_ip = input().strip()
+            sys.stdout.write("Pairing port: ")
+            sys.stdout.flush()
+            pair_port = int(input().strip())
+            sys.stdout.write("Pairing code (6 digits): ")
+            sys.stdout.flush()
+            pair_code = input().strip()
+        except (EOFError, KeyboardInterrupt):
+            raise ADBError("Cancelled by user.")
+        except ValueError:
+            raise ADBError("Invalid port number.")
+
+        pair_wireless(pair_ip, pair_port, pair_code, adb_path=adb_path)
+
+    # Connect to device
+    sys.stdout.write("\nDevice IP and port for ADB connection:\n")
+    sys.stdout.write("(Shown under 'Wireless debugging' on the device)\n")
+    try:
+        sys.stdout.write("Device IP address: ")
+        sys.stdout.flush()
+        ip = input().strip()
+        sys.stdout.write("Device port (default 5555): ")
+        sys.stdout.flush()
+        port_raw = input().strip()
+        port = int(port_raw) if port_raw else 5555
+    except (EOFError, KeyboardInterrupt):
+        raise ADBError("Cancelled by user.")
+    except ValueError:
+        raise ADBError("Invalid port number.")
+
+    connect_wireless(ip, port, adb_path=adb_path)

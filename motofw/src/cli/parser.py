@@ -86,4 +86,16 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--configure", action="store_true", default=False, help="Interactively configure API request parameters before scanning.")
     _add_request_overrides(sp)
 
+    # settings
+    stp = sub.add_parser("settings", help="Configure motofw settings.")
+    stp_sub = stp.add_subparsers(dest="settings_command", help="Settings commands")
+    adb_p = stp_sub.add_parser(
+        "auto-settings-adb",
+        help="Auto-detect device settings via ADB (USB or wireless) and generate device.ini.",
+    )
+    adb_p.add_argument(
+        "--output", "-o", type=Path, default=Path("device.ini"),
+        help="Path to write device.ini (default: ./device.ini).",
+    )
+
     return parser
