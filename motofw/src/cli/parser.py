@@ -9,13 +9,20 @@ from motofw.src.config.options import (
     BOOTLOADER_STATUS_OPTIONS,
     BUILD_TYPE_OPTIONS,
     NETWORK_OPTIONS,
+    SERVER_NAMES,
     TRIGGERED_BY_OPTIONS,
     USER_LOCATION_OPTIONS,
 )
 
 
 def _add_request_overrides(p: argparse.ArgumentParser) -> None:
-    """Add shared --triggered-by / --network / etc. flags to *p*."""
+    """Add shared --triggered-by / --network / --server / etc. flags to *p*."""
+    p.add_argument(
+        "--server",
+        choices=SERVER_NAMES,
+        default=None,
+        help="Server environment (production/china/qa/dev/staging/china-staging).",
+    )
     p.add_argument(
         "--triggered-by",
         choices=TRIGGERED_BY_OPTIONS,
@@ -84,6 +91,10 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--no-verify", action="store_true", default=False, help="Skip MD5 check.")
     sp.add_argument("--no-interactive", action="store_true", default=False, help="Skip interactive menu, just list results.")
     sp.add_argument("--configure", action="store_true", default=False, help="Interactively configure API request parameters before scanning.")
+    sp.add_argument(
+        "--discover", action="store_true", default=False,
+        help="Multi-server discovery: query all 6 Motorola servers (production, QA, dev, staging, China) to find OTAs.",
+    )
     _add_request_overrides(sp)
 
     # settings

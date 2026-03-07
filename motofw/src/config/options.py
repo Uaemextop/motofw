@@ -6,6 +6,20 @@ These constants define which values the server accepts for each configurable fie
 
 from __future__ import annotations
 
+# ── Server environments (UpgradeUtils.smali, CDSUtils.smali) ──────
+# Production, QA, Dev, Staging, and China-specific servers discovered
+# in smali analysis of the Motorola OTA APK.
+SERVER_OPTIONS: dict[str, str] = {
+    "production": "moto-cds.appspot.com",          # UpgradeUtils.smali:43 PRODUCTION_SERVER
+    "china": "moto-cds.svcmot.cn",                 # UpgradeUtils.smali:19 CHINA_PRODUCTION_SERVER
+    "qa": "moto-cds-qa.appspot.com",               # UpgradeUtils.smali:45
+    "dev": "moto-cds-dev.appspot.com",              # UpgradeUtils.smali:39
+    "staging": "moto-cds-staging.appspot.com",      # UpgradeUtils.smali:47
+    "china-staging": "ota-cn-sdc.blurdev.com",      # UpgradeUtils.smali:21 CHINA_STAGING_SERVER
+}
+
+SERVER_NAMES: list[str] = list(SERVER_OPTIONS.keys())
+
 # ── triggeredBy (PublicUtilityMethods$TRIGGER_BY.smali) ──
 TRIGGERED_BY_OPTIONS: list[str] = ["user", "polling", "pairing", "setup"]
 
@@ -47,6 +61,12 @@ AB_INSTALL_TYPE_OPTIONS: list[str] = [
 
 # ── Mapping of human labels to option lists (for interactive menus) ──
 CONFIGURABLE_PARAMS: dict[str, dict] = {
+    "server": {
+        "label": "Server environment (UpgradeUtils.smali)",
+        "options": SERVER_NAMES,
+        "default": "production",
+        "description": "Motorola CDS server to query",
+    },
     "triggered_by": {
         "label": "Trigger type (triggeredBy)",
         "options": TRIGGERED_BY_OPTIONS,

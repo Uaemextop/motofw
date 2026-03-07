@@ -208,6 +208,37 @@ class TestScanParser:
         args = ap.parse_args(["query", "--network", "cellular"])
         assert args.network == "cellular"
 
+    def test_scan_server_flag(self):
+        ap = build_parser()
+        args = ap.parse_args(["scan", "--server", "dev"])
+        assert args.server == "dev"
+
+    def test_query_server_flag(self):
+        ap = build_parser()
+        args = ap.parse_args(["query", "--server", "staging"])
+        assert args.server == "staging"
+
+    def test_scan_discover_flag(self):
+        ap = build_parser()
+        args = ap.parse_args(["scan", "--discover"])
+        assert args.discover is True
+
+    def test_scan_discover_with_no_interactive(self):
+        ap = build_parser()
+        args = ap.parse_args(["scan", "--discover", "--no-interactive"])
+        assert args.discover is True
+        assert args.no_interactive is True
+
+    def test_scan_server_china(self):
+        ap = build_parser()
+        args = ap.parse_args(["scan", "--server", "china"])
+        assert args.server == "china"
+
+    def test_download_server_flag(self):
+        ap = build_parser()
+        args = ap.parse_args(["download", "--server", "china-staging"])
+        assert args.server == "china-staging"
+
 
 # ── Options module tests ──────────────────────────────────────────────
 
@@ -243,6 +274,23 @@ class TestOptions:
         assert "SMR" in UPDATE_TYPE_OPTIONS
         assert "OS" in UPDATE_TYPE_OPTIONS
 
+    def test_server_options(self):
+        from motofw.src.config.options import SERVER_NAMES, SERVER_OPTIONS
+        assert len(SERVER_OPTIONS) == 6
+        assert "production" in SERVER_OPTIONS
+        assert "china" in SERVER_OPTIONS
+        assert "qa" in SERVER_OPTIONS
+        assert "dev" in SERVER_OPTIONS
+        assert "staging" in SERVER_OPTIONS
+        assert "china-staging" in SERVER_OPTIONS
+        assert SERVER_OPTIONS["production"] == "moto-cds.appspot.com"
+        assert SERVER_OPTIONS["china"] == "moto-cds.svcmot.cn"
+        assert SERVER_OPTIONS["qa"] == "moto-cds-qa.appspot.com"
+        assert SERVER_OPTIONS["dev"] == "moto-cds-dev.appspot.com"
+        assert SERVER_OPTIONS["staging"] == "moto-cds-staging.appspot.com"
+        assert SERVER_OPTIONS["china-staging"] == "ota-cn-sdc.blurdev.com"
+        assert SERVER_NAMES == list(SERVER_OPTIONS.keys())
+
     def test_configurable_params_structure(self):
         from motofw.src.config.options import CONFIGURABLE_PARAMS
         for key, info in CONFIGURABLE_PARAMS.items():
@@ -251,6 +299,11 @@ class TestOptions:
             assert "default" in info
             assert "description" in info
             assert info["default"] in info["options"]
+
+    def test_configurable_params_includes_server(self):
+        from motofw.src.config.options import CONFIGURABLE_PARAMS
+        assert "server" in CONFIGURABLE_PARAMS
+        assert CONFIGURABLE_PARAMS["server"]["default"] == "production"
 
 
 # ── Apply overrides tests for new fields ─────────────────────────────
@@ -276,6 +329,31 @@ class TestApplyOverridesNew:
         from motofw.src.cli.commands import _apply_overrides
         c2 = _apply_overrides(default_config, user_location="CN")
         assert c2.user_location == "CN"
+
+    def test_override_server(self, default_config: Config):
+        from motofw.src.cli.commands import _apply_overrides
+        c2 = _apply_overrides(default_config, server="qa")
+        assert c2.server_url == "moto-cds-qa.appspot.com"
+
+    def test_override_server_china(self, default_config: Config):
+        from motofw.src.cli.commands import _apply_overrides
+        c2 = _apply_overrides(default_config, server="china")
+        assert c2.server_url == "moto-cds.svcmot.cn"
+
+    def test_override_server_dev(self, default_config: Config):
+        from motofw.src.cli.commands import _apply_overrides
+        c2 = _apply_overrides(default_config, server="dev")
+        assert c2.server_url == "moto-cds-dev.appspot.com"
+
+    def test_override_server_staging(self, default_config: Config):
+        from motofw.src.cli.commands import _apply_overrides
+        c2 = _apply_overrides(default_config, server="staging")
+        assert c2.server_url == "moto-cds-staging.appspot.com"
+
+    def test_override_server_china_staging(self, default_config: Config):
+        from motofw.src.cli.commands import _apply_overrides
+        c2 = _apply_overrides(default_config, server="china-staging")
+        assert c2.server_url == "ota-cn-sdc.blurdev.com"
 
     def test_scan_passes_triggered_by(self, default_config: Config, raw_check_response: Dict[str, Any]):
         """Scan passes triggered_by to check_body."""

@@ -25,7 +25,7 @@ from motofw.src.cli.output import (
     print_update_info,
 )
 from motofw.src.cli.parser import build_parser
-from motofw.src.config.options import CONFIGURABLE_PARAMS
+from motofw.src.config.options import CONFIGURABLE_PARAMS, SERVER_OPTIONS
 from motofw.src.config.settings import Config, load_config
 from motofw.src.device.adb import (
     ADBError,
@@ -53,6 +53,7 @@ def _apply_overrides(
     bootloader_status: Optional[str] = None,
     build_type: Optional[str] = None,
     user_location: Optional[str] = None,
+    server: Optional[str] = None,
 ) -> Config:
     """Return a new frozen Config with selected fields replaced."""
     kw = {f.name: getattr(cfg, f.name) for f in cfg.__dataclass_fields__.values()}
@@ -72,6 +73,8 @@ def _apply_overrides(
         kw["build_type"] = build_type
     if user_location is not None:
         kw["user_location"] = user_location
+    if server is not None:
+        kw["server_url"] = SERVER_OPTIONS[server]
     return Config(**kw)
 
 
@@ -193,6 +196,16 @@ def _interactive_configure(cfg: Config, triggered_by: str) -> tuple[Config, str]
     for key, info in CONFIGURABLE_PARAMS.items():
         if key == "triggered_by":
             triggered_by = _choose_option(info["label"], info["options"], triggered_by)
+        elif key == "server":
+            # Map current server_url back to server name for display
+            current_name = "production"
+            for name, host in SERVER_OPTIONS.items():
+                if host == cfg.server_url:
+                    current_name = name
+                    break
+            chosen = _choose_option(info["label"], info["options"], current_name)
+            if chosen != current_name:
+                overrides["server"] = chosen
         else:
             current = getattr(cfg, key, info["default"])
             chosen = _choose_option(info["label"], info["options"], current)
@@ -206,14 +219,18 @@ def _interactive_configure(cfg: Config, triggered_by: str) -> tuple[Config, str]
     return cfg, triggered_by
 
 
-def _cmd_scan(cfg: Config, *, no_interactive: bool = False, configure: bool = False, triggered_by: str = "user") -> int:
+def _cmd_scan(cfg: Config, *, no_interactive: bool = False, configure: bool = False, triggered_by: str = "user", discover: bool = False) -> int:
     """Execute the ``scan`` sub-command — find all available OTAs and let user choose."""
     if configure:
         cfg, triggered_by = _interactive_configure(cfg, triggered_by)
 
+    if discover:
+        return _cmd_discover(cfg, triggered_by=triggered_by, no_interactive=no_interactive)
+
     sys.stdout.write("Scanning all known builds for available updates …\n")
     sys.stdout.write(f"Device: {cfg.model} ({cfg.product}/{cfg.hardware})\n")
     sys.stdout.write(f"Serial: {cfg.serial_number}  IMEI: {cfg.imei}\n")
+    sys.stdout.write(f"Server: {cfg.server_url}\n")
     sys.stdout.write(
         f"Network: {cfg.network}  Bootloader: {cfg.bootloader_status}  "
         f"Build type: {cfg.build_type}  Trigger: {triggered_by}\n\n"
@@ -240,6 +257,109 @@ def _cmd_scan(cfg: Config, *, no_interactive: bool = False, configure: bool = Fa
 
     # Interactive menu
     return _interactive_download(cfg, report)
+
+
+def _cmd_discover(cfg: Config, *, triggered_by: str = "user", no_interactive: bool = False) -> int:
+    """Multi-server discovery: query all Motorola servers for available OTAs.
+
+    Searches production, QA, dev, staging, China production, and China staging
+    servers.  Each server is queried with every known build SHA1 to find all
+    available firmware updates.
+
+    Server endpoints discovered from smali analysis (UpgradeUtils.smali):
+      production     = moto-cds.appspot.com
+      china          = moto-cds.svcmot.cn
+      qa             = moto-cds-qa.appspot.com       (may return 503)
+      dev            = moto-cds-dev.appspot.com
+      staging        = moto-cds-staging.appspot.com
+      china-staging  = ota-cn-sdc.blurdev.com
+    """
+    from motofw.src.api.scanner import scan_updates
+
+    sys.stdout.write("\n── Multi-server OTA Discovery ──\n")
+    sys.stdout.write(f"Device: {cfg.model} ({cfg.product}/{cfg.hardware})\n")
+    sys.stdout.write(f"Serial: {cfg.serial_number}  IMEI: {cfg.imei}\n")
+    sys.stdout.write(f"Trigger: {triggered_by}\n")
+    sys.stdout.write(f"Servers: {len(SERVER_OPTIONS)}\n\n")
+
+    all_results: list[ScanResult] = []
+    all_errors: list[str] = []
+    total_queried = 0
+    servers_ok = 0
+    servers_fail = 0
+
+    for name, host in SERVER_OPTIONS.items():
+        sys.stdout.write(f"  [{name}] {host} … ")
+        sys.stdout.flush()
+
+        srv_kw = {f.name: getattr(cfg, f.name) for f in cfg.__dataclass_fields__.values()}
+        srv_kw["server_url"] = host
+        srv_cfg = Config(**srv_kw)
+
+        try:
+            with OTASession(srv_cfg) as ses:
+                report = scan_updates(srv_cfg, session=ses, triggered_by=triggered_by)
+        except Exception as exc:
+            servers_fail += 1
+            msg = f"{name} ({host}): {exc}"
+            all_errors.append(msg)
+            sys.stdout.write(f"✗ error ({type(exc).__name__})\n")
+            continue
+
+        servers_ok += 1
+        total_queried += report.builds_queried
+
+        if report.results:
+            for r in report.results:
+                r.server_name = name
+            all_results.extend(report.results)
+            sys.stdout.write(f"✓ {len(report.results)} update(s)\n")
+        else:
+            sys.stdout.write(f"– no updates ({report.builds_queried} builds checked)\n")
+
+        for err in report.errors:
+            all_errors.append(f"{name}: {err}")
+
+    sys.stdout.write(f"\n── Discovery Summary ──\n")
+    sys.stdout.write(
+        f"Servers OK: {servers_ok}/{len(SERVER_OPTIONS)}  "
+        f"Builds checked: {total_queried}  "
+        f"Updates found: {len(all_results)}\n"
+    )
+
+    if all_errors:
+        sys.stdout.write(f"\nWarnings ({len(all_errors)}):\n")
+        for err in all_errors:
+            sys.stderr.write(f"  • {err}\n")
+
+    if not all_results:
+        sys.stdout.write(
+            "\nNo updates found across any server.\n"
+            "The server may not be serving updates for this device/serial combination.\n"
+            "Tip: Try a different serial number with --serial to check rollout status.\n"
+        )
+        return 0
+
+    # Print results with server column
+    sys.stdout.write(f"\nFound {len(all_results)} update(s):\n\n")
+    sys.stdout.write(
+        f"{'#':>3}  {'Server':<16} {'Source Build':<22} {'Target Build':<22} {'Type':<6} {'Size':>12}\n"
+    )
+    sys.stdout.write(f"{'─' * 3}  {'─' * 16} {'─' * 22} {'─' * 22} {'─' * 6} {'─' * 12}\n")
+    for idx, r in enumerate(all_results, 1):
+        size_mb = f"{r.size / (1024 * 1024):.1f} MB"
+        sys.stdout.write(
+            f"{idx:>3}  {r.server_name:<16} {r.source_build:<22} {r.target_build:<22} "
+            f"{r.update_type:<6} {size_mb:>12}\n"
+        )
+    sys.stdout.write("\n")
+
+    if no_interactive:
+        return 0
+
+    # Build a combined report for the interactive download menu
+    combined = ScanReport(results=all_results, errors=all_errors, builds_queried=total_queried)
+    return _interactive_download(cfg, combined)
 
 
 def _interactive_download(cfg: Config, report: ScanReport) -> int:
@@ -367,6 +487,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         overrides["build_type"] = args.build_type
     if hasattr(args, "user_location") and args.user_location:
         overrides["user_location"] = args.user_location
+    if hasattr(args, "server") and args.server:
+        overrides["server"] = args.server
     if overrides:
         cfg = _apply_overrides(cfg, **overrides)
 
@@ -393,6 +515,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             no_interactive=getattr(args, "no_interactive", False),
             configure=getattr(args, "configure", False),
             triggered_by=triggered_by,
+            discover=getattr(args, "discover", False),
         )
     if args.command == "settings":
         return _cmd_settings(args)

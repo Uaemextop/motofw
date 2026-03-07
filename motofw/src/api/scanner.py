@@ -63,6 +63,7 @@ class ScanResult:
     model: str
     release_notes: str
     check_response: CheckResponse
+    server_name: str = ""
 
 
 @dataclass

@@ -4,7 +4,16 @@
 # SECURITY: config.ini is git-ignored and must NEVER be committed.
 
 [server]
-# Motorola OTA update server hostname (from CDSUtils.smali evidence)
+# Motorola OTA update server hostname (from CDSUtils.smali / UpgradeUtils.smali)
+# Available servers discovered from smali analysis:
+#   production     = moto-cds.appspot.com          (default — global production)
+#   china          = moto-cds.svcmot.cn            (China production)
+#   qa             = moto-cds-qa.appspot.com       (QA / testing)
+#   dev            = moto-cds-dev.appspot.com      (development)
+#   staging        = moto-cds-staging.appspot.com  (staging)
+#   china-staging  = ota-cn-sdc.blurdev.com        (China staging / dogfood)
+#
+# Or use --server flag: motofw scan --server qa
 url = moto-cds.appspot.com
 
 # Endpoint base paths (from CDSUtils.smali evidence)
@@ -61,6 +70,7 @@ device_rooted = false
 is_4gb_ram = false
 device_chipset =
 
+[identity]
 # --- identityInfo fields ---
 serial_number = ZY32LNRW97
 
@@ -70,7 +80,6 @@ imei2 =
 mccmnc =
 mccmnc2 =
 
-[identity]
 # How the device identifies itself to the server
 id_type = serialNumber
 
