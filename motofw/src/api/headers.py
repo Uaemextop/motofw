@@ -1,18 +1,63 @@
 """Construct HTTP headers for OTA API requests.
 
 Evidence from smali analysis:
-- API calls (check/resources/state): Volley JsonObjectRequest sets
-  Content-Type and Accept to application/json implicitly.
-- Download calls: AdvancedFileDownloader sets Accept-Encoding: identity
-  and Connection: close, plus any custom server-provided headers.
+
+User-Agent
+----------
+Android's ``HttpURLConnection`` sends ``System.getProperty("http.agent")``
+which produces the standard Dalvik User-Agent string:
+
+    Dalvik/2.1.0 (Linux; U; Android {osVersion}; {model} Build/{buildId})
+
+See ``UEDownloadRequestBuilder.smali:517`` (reads ``http.agent``) and
+``LazyHeaders$Builder.smali:63`` (same property).
+
+Content-Type
+------------
+Volley ``JsonRequest.smali:49`` sets:
+
+    application/json; charset=utf-8
+
+(format string ``"application/json; charset=%s"`` with ``"utf-8"``).
+
+API calls (check/resources/state)
+---------------------------------
+Volley's ``HurlStack`` iterates request headers via
+``setRequestProperty`` (``HurlStack.smali:551``).  ``JsonObjectRequest``
+inherits ``JsonRequest.getBodyContentType()`` for Content-Type.
+
+Download calls
+--------------
+``AdvancedFileDownloader.smali:1259–1276`` sets:
+  Accept-Encoding: identity
+  Connection: close
+  Range: bytes=N-   (resume)
 """
 
 from __future__ import annotations
 
 from typing import Dict, Optional
 
+
+def build_user_agent(os_version: str, model: str, build_id: str) -> str:
+    """Build the Dalvik User-Agent matching the real Android OTA app.
+
+    Format from ``System.getProperty("http.agent")`` on Android::
+
+        Dalvik/2.1.0 (Linux; U; Android 15; moto g05 Build/VVTA35.51-100)
+
+    Source: ``UEDownloadRequestBuilder.smali:517``,
+    ``LazyHeaders$Builder.smali:63``.
+    """
+    return (
+        f"Dalvik/2.1.0 (Linux; U; Android {os_version}; "
+        f"{model} Build/{build_id})"
+    )
+
+
+# Volley JsonRequest.smali:49  →  "application/json; charset=utf-8"
 DEFAULT_HEADERS: Dict[str, str] = {
-    "Content-Type": "application/json",
+    "Content-Type": "application/json; charset=utf-8",
     "Accept": "application/json",
 }
 

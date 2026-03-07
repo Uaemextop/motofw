@@ -85,17 +85,21 @@ def _build_base_url(cfg: Config) -> str:
 
 def _dump_curl(cfg: Config, body: dict[str, Any]) -> None:
     """Print the request body and an equivalent curl command to stderr."""
+    from motofw.src.api.headers import build_user_agent
+
     path = check_url(cfg).lstrip("/")
     url = f"{_build_base_url(cfg)}/{path}"
     body_json = json.dumps(body, indent=2)
+    ua = build_user_agent(cfg.os_version, cfg.model, cfg.build_id)
 
     sys.stderr.write("\n── Request body ──\n")
     sys.stderr.write(body_json)
     sys.stderr.write("\n\n── Equivalent curl ──\n")
     sys.stderr.write(
         f"curl -s -X POST \\\n"
-        f"  -H 'Content-Type: application/json' \\\n"
+        f"  -H 'Content-Type: application/json; charset=utf-8' \\\n"
         f"  -H 'Accept: application/json' \\\n"
+        f"  -H 'User-Agent: {ua}' \\\n"
         f"  '{url}' \\\n"
         f"  -d '{json.dumps(body)}'\n\n"
     )

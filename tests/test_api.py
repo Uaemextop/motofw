@@ -12,6 +12,7 @@ from motofw.src.api.headers import (
     DOWNLOAD_HEADERS,
     build_download_headers,
     build_headers,
+    build_user_agent,
 )
 from motofw.src.api.orchestrator import check_update
 from motofw.src.api.response import parse_check_response, parse_content_resources
@@ -23,12 +24,13 @@ from tests.conftest import E_CONTEXT, E_OTA_SHA1, E_SERVER_URL
 
 class TestHeaders:
     def test_default_content_type(self):
-        assert DEFAULT_HEADERS["Content-Type"] == "application/json"
+        # Volley JsonRequest.smali:49 → "application/json; charset=utf-8"
+        assert DEFAULT_HEADERS["Content-Type"] == "application/json; charset=utf-8"
 
     def test_merge_extra(self):
         h = build_headers({"X-Custom": "val"})
         assert h["X-Custom"] == "val"
-        assert h["Content-Type"] == "application/json"
+        assert h["Content-Type"] == "application/json; charset=utf-8"
 
     def test_download_headers_identity(self):
         assert DOWNLOAD_HEADERS["Accept-Encoding"] == "identity"
@@ -44,6 +46,15 @@ class TestHeaders:
         h = build_download_headers()
         assert "Range" not in h
         assert "If-Match" not in h
+
+    def test_user_agent_format(self):
+        """User-Agent matches Android Dalvik format from UEDownloadRequestBuilder.smali:517."""
+        ua = build_user_agent("15", "moto g05", "VVTA35.51-100")
+        assert ua == "Dalvik/2.1.0 (Linux; U; Android 15; moto g05 Build/VVTA35.51-100)"
+
+    def test_user_agent_different_device(self):
+        ua = build_user_agent("14", "razr 50", "U2UQS35.29-72-2")
+        assert ua == "Dalvik/2.1.0 (Linux; U; Android 14; razr 50 Build/U2UQS35.29-72-2)"
 
 
 class TestUrls:

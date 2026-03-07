@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional
 
 import httpx
 
-from motofw.src.api.headers import DEFAULT_HEADERS
+from motofw.src.api.headers import DEFAULT_HEADERS, build_user_agent
 from motofw.src.api.request import post_with_retry, stream_get
 from motofw.src.config.settings import Config
 
@@ -27,13 +27,26 @@ class OTASession:
         self._cfg = cfg
         self._base = f"https://{cfg.server_url}"
         self._delays = [d / 1000.0 for d in cfg.retry_delays_ms]
+
+        # Build headers matching the real Motorola OTA app.
+        # User-Agent: Dalvik/2.1.0 (Linux; U; Android {ver}; {model} Build/{buildId})
+        #   Source: System.getProperty("http.agent") — UEDownloadRequestBuilder.smali:517
+        # Content-Type: application/json; charset=utf-8
+        #   Source: Volley JsonRequest.smali:49
+        session_headers = dict(DEFAULT_HEADERS)
+        ua = build_user_agent(cfg.os_version, cfg.model, cfg.build_id)
+        session_headers["User-Agent"] = ua
+
         self._client = httpx.Client(
             base_url=self._base,
             timeout=httpx.Timeout(cfg.timeout, connect=cfg.timeout),
-            headers=dict(DEFAULT_HEADERS),
+            headers=session_headers,
             follow_redirects=True,
         )
-        logger.debug("OTASession opened — %s (timeout=%ds)", self._base, cfg.timeout)
+        logger.debug(
+            "OTASession opened — %s (timeout=%ds, UA=%s)",
+            self._base, cfg.timeout, ua,
+        )
 
     @property
     def base_url(self) -> str:
