@@ -2,13 +2,18 @@
 
 from __future__ import annotations
 
+import json
 import logging
+import sys
 from pathlib import Path
-from typing import Optional, Sequence
+from typing import Any, Dict, Optional, Sequence
 
+from motofw.src.api.body import check_body
+from motofw.src.api.headers import DEFAULT_HEADERS
 from motofw.src.api.orchestrator import check_update, download_firmware, get_resources
-from motofw.src.api.response import parse_content_resources
+from motofw.src.api.response import parse_check_response, parse_content_resources
 from motofw.src.api.session import OTASession
+from motofw.src.api.urls import check_url
 from motofw.src.cli.log import setup_logging
 from motofw.src.cli.output import (
     print_downloaded,
@@ -45,17 +50,56 @@ def _apply_overrides(
     return Config(**kw)
 
 
-def _cmd_query(cfg: Config) -> int:
+def _build_base_url(cfg: Config) -> str:
+    """Build the full HTTPS base URL from Config."""
+    return f"https://{cfg.server_url}"
+
+
+def _dump_curl(cfg: Config, body: Dict[str, Any]) -> None:
+    """Print the request body and an equivalent curl command to stderr."""
+    path = check_url(cfg).lstrip("/")
+    url = f"{_build_base_url(cfg)}/{path}"
+    body_json = json.dumps(body, indent=2)
+
+    sys.stderr.write("\n── Request body ──\n")
+    sys.stderr.write(body_json)
+    sys.stderr.write("\n\n── Equivalent curl ──\n")
+    sys.stderr.write(
+        f"curl -s -X POST \\\n"
+        f"  -H 'Content-Type: application/json' \\\n"
+        f"  -H 'Accept: application/json' \\\n"
+        f"  '{url}' \\\n"
+        f"  -d '{json.dumps(body)}'\n\n"
+    )
+
+
+def _cmd_query(cfg: Config, *, dump_request: bool = False, raw: bool = False) -> int:
     """Execute the ``query`` sub-command."""
     logger.info("Query: build_id=%s sha1=%s serial=%s", cfg.build_id, cfg.ota_source_sha1, cfg.serial_number)
+
+    body = check_body(cfg)
+
+    if dump_request:
+        _dump_curl(cfg, body)
+
     with OTASession(cfg) as ses:
-        resp = check_update(cfg, session=ses)
+        resp_http = ses.post(check_url(cfg), json_body=body)
+        raw_json: Dict[str, Any] = resp_http.json()
+
+    if raw:
+        sys.stdout.write(json.dumps(raw_json, indent=2) + "\n")
+        return 0
+
+    resp = parse_check_response(raw_json)
     print_query_result(resp)
     return 0
 
 
-def _cmd_download(cfg: Config) -> int:
+def _cmd_download(cfg: Config, *, dump_request: bool = False) -> int:
     """Execute the ``download`` sub-command."""
+    if dump_request:
+        _dump_curl(cfg, check_body(cfg))
+
     with OTASession(cfg) as ses:
         logger.info("Check: build_id=%s sha1=%s", cfg.build_id, cfg.ota_source_sha1)
         resp = check_update(cfg, session=ses)
@@ -109,8 +153,12 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         cfg = _apply_overrides(cfg, **overrides)
 
     if args.command == "query":
-        return _cmd_query(cfg)
+        return _cmd_query(
+            cfg,
+            dump_request=getattr(args, "dump_request", False),
+            raw=getattr(args, "raw", False),
+        )
     if args.command == "download":
-        return _cmd_download(cfg)
+        return _cmd_download(cfg, dump_request=getattr(args, "dump_request", False))
     ap.print_help()
     return 1

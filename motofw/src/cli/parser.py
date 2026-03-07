@@ -22,6 +22,8 @@ def build_parser() -> argparse.ArgumentParser:
     qp = sub.add_parser("query", help="Check for an available OTA update.")
     qp.add_argument("--ota-source-sha1", default=None, help="Override otaSourceSha1.")
     qp.add_argument("--serial", default=None, help="Override serial number.")
+    qp.add_argument("--dump-request", action="store_true", default=False, help="Print the request body and equivalent curl command.")
+    qp.add_argument("--raw", action="store_true", default=False, help="Print the full raw server response JSON.")
 
     # download
     dp = sub.add_parser("download", help="Download an available OTA update.")
@@ -29,5 +31,6 @@ def build_parser() -> argparse.ArgumentParser:
     dp.add_argument("--ota-source-sha1", default=None, help="Override otaSourceSha1.")
     dp.add_argument("--serial", default=None, help="Override serial number.")
     dp.add_argument("--no-verify", action="store_true", default=False, help="Skip MD5 check.")
+    dp.add_argument("--dump-request", action="store_true", default=False, help="Print the request body and equivalent curl command.")
 
     return parser
