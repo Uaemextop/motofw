@@ -205,8 +205,10 @@ def _cmd_scan(cfg: Config, *, no_interactive: bool = False, configure: bool = Fa
     sys.stdout.write("Scanning all known builds for available updates …\n")
     sys.stdout.write(f"Device: {cfg.model} ({cfg.product}/{cfg.hardware})\n")
     sys.stdout.write(f"Serial: {cfg.serial_number}  IMEI: {cfg.imei}\n")
-    sys.stdout.write(f"Network: {cfg.network}  Bootloader: {cfg.bootloader_status}  "
-                     f"Build type: {cfg.build_type}  Trigger: {triggered_by}\n\n")
+    sys.stdout.write(
+        f"Network: {cfg.network}  Bootloader: {cfg.bootloader_status}  "
+        f"Build type: {cfg.build_type}  Trigger: {triggered_by}\n\n"
+    )
 
     with OTASession(cfg) as ses:
         report = scan_updates(cfg, session=ses, triggered_by=triggered_by)
