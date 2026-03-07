@@ -1,0 +1,75 @@
+# =============================================================================
+# motofw device configuration — device-specific parameters
+# =============================================================================
+# This file contains device-specific settings (IMEI, SN, build fingerprint,
+# etc.) that vary per device. Copy to device.ini and fill in your values.
+#
+# SECURITY: device.ini is git-ignored and must NEVER be committed.
+# It contains sensitive identifiers like IMEI and serial number.
+#
+# All values come from Android system properties. On a rooted device you
+# can retrieve them with:
+#   getprop ro.build.fingerprint
+#   getprop ro.build.display.id
+#   getprop ro.mot.build.guid        (this is ota_source_sha1)
+#   getprop ro.serialno
+#   etc.
+#
+# ── Known update chain for lamu_g (moto g05) ──
+#   VVTA35.51-28-15  (sha1: 23d670d5d06f351)  ← oldest observed
+#   VVTA35.51-65-5   (sha1: a363e2a67728d8a)
+#   VVTA35.51-100    (sha1: 190325d96009ac5)
+#   VVTAS35.51-100-3 (sha1: 96398c9adf48ac1)  ← latest observed
+
+[device]
+# --- deviceInfo fields ---
+manufacturer = motorola
+hardware = lamu
+brand = motorola
+model = moto g05
+product = lamul_g
+os = Android
+os_version = 15
+country = MX
+region = MX
+language = es
+user_language = es_MX
+
+# --- extraInfo fields ---
+client_identity = motorola-ota-client-app
+carrier =
+bootloader_version =
+# Build fingerprint — from `getprop ro.build.fingerprint`
+fingerprint = motorola/lamul_g/lamul:15/VVTA35.51-100/e51bc9:user/release-keys
+radio_version =
+build_tags = release-keys
+build_type = user
+build_device = lamul
+# Build identifier — from `getprop ro.build.display.id`
+build_id = VVTA35.51-100
+build_display_id = VVTA35.51-100
+build_incremental_version =
+release_version = 15
+# Context key — from `getprop ro.mot.build.guid`
+# This is the sha1 for VVTA35.51-100, which has a known update to VVTAS35.51-100-3
+ota_source_sha1 = 190325d96009ac5
+network = wifi
+apk_version = 3500094
+provisioned_time = 0
+incremental_version = 0
+additional_info =
+user_location = Non-CN
+bootloader_status = locked
+device_rooted = false
+is_4gb_ram = false
+device_chipset =
+
+[identity]
+# Device serial number — from `getprop ro.serialno`
+serial_number = ZY32LNRW97
+# IMEI — from `*#06#` or Settings > About Phone
+imei = 359488357396203
+imei2 =
+# SIM operator MCC+MNC codes (optional)
+mccmnc =
+mccmnc2 =

@@ -4,8 +4,16 @@ source_code/
 # User-specific configuration (never committed — fill in your real values)
 config.ini
 
+# Device-specific identity file (never committed — contains IMEI, serial, etc.)
+device.ini
+
 # Analysis output directories
 output/
+
+# Downloaded firmware files (never committed)
+*.zip
+*.bin
+firmware/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -214,3 +222,6 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+*.egg-info/
+.coverage
+.pytest_cache/

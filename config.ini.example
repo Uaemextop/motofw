@@ -1,0 +1,121 @@
+# =============================================================================
+# motofw configuration — copy to config.ini and fill in your values
+# =============================================================================
+# SECURITY: config.ini is git-ignored and must NEVER be committed.
+
+[server]
+# Motorola OTA update server hostname (from CDSUtils.smali / UpgradeUtils.smali)
+# Available servers discovered from smali analysis:
+#   production     = moto-cds.appspot.com          (default — global production)
+#   china          = moto-cds.svcmot.cn            (China production)
+#   qa             = moto-cds-qa.appspot.com       (QA / testing)
+#   dev            = moto-cds-dev.appspot.com      (development)
+#   staging        = moto-cds-staging.appspot.com  (staging)
+#   china-staging  = ota-cn-sdc.blurdev.com        (China staging / dogfood)
+#
+# Or use --server flag: motofw scan --server qa
+url = moto-cds.appspot.com
+
+# Endpoint base paths (from CDSUtils.smali evidence)
+check_path = cds/upgrade/1/check
+resources_path = cds/upgrade/1/resources
+state_path = cds/upgrade/1/state
+
+# Request context — always "ota" per CDSUtils.smali
+context = ota
+
+# HTTP timeout in seconds
+timeout = 60
+
+# Retry back-off delays in milliseconds (comma-separated)
+# WebServiceThread.smali backOffValues: 2000,5000,15000,30000,60000,...
+retry_delays_ms = 2000,5000,15000,30000
+
+[device]
+# --- deviceInfo fields ---
+manufacturer = motorola
+hardware = lamu
+brand = motorola
+model = moto g05
+product = lamul_g
+os = Android
+os_version = 15
+country = MX
+region = MX
+language = es
+user_language = es_MX
+
+# --- extraInfo fields ---
+client_identity = motorola-ota-client-app
+carrier =
+bootloader_version =
+fingerprint = motorola/lamul_g/lamul:15/VVTA35.51-28-15/bd4d30:user/release-keys
+radio_version =
+build_tags = release-keys
+build_type = user
+build_device = lamul
+build_id = VVTA35.51-28-15
+build_display_id = VVTA35.51-28-15
+build_incremental_version =
+release_version = 15
+ota_source_sha1 = 23d670d5d06f351
+network = wifi
+apk_version = 3500094
+provisioned_time = 0
+incremental_version = 0
+additional_info =
+user_location = Non-CN
+bootloader_status = locked
+device_rooted = false
+is_4gb_ram = false
+device_chipset =
+
+# --- additional extraInfo fields (BuildPropReader.smali lines 1006–1157) ---
+# ro.build.version.security_patch (line 1098) — security patch level string
+security_version =
+# ro.mot.version (line 1080) — integer Motorola version code
+mot_version = 0
+# ro.enterpriseedition (line 1110) — enterprise edition flag
+enterprise_edition = false
+# ro.virtual_ab.enabled (line 1122) — Virtual A/B update support
+virtual_ab_enabled = false
+# BotaSettings vitalUpdate (line 1157) — vital/critical update flag
+vital_update = false
+# ro.vendor.hw.storage (line 1006) — storage capacity string
+hw_storage =
+# ro.vendor.hw.ram (line 1014) — RAM capacity string
+hw_ram =
+# ro.vendor.hw.esim (line 1022) — eSIM support string
+hw_esim =
+# ro.mot.product_wave (line 1030) — product wave identifier
+product_wave =
+# ro.mot.build.oem.product (line 1038) — OEM product name
+oem_product =
+# ro.mot.build.system.product (line 1046) — system product name
+system_product =
+# ro.mot.build.product.increment (line 1054) — product increment string
+product_increment =
+# ro.boot.veritymode (line 1062) — dm-verity mode
+verity_mode =
+# partition.system.verified (line 1070) — system partition verified hash
+system_verified =
+
+[identity]
+# --- identity fields ---
+serial_number = ZY32LNRW97
+
+# --- IMEI / SIM fields (optional, from BuildPropReader.smali) ---
+imei = 359488357396203
+imei2 =
+mccmnc =
+mccmnc2 =
+
+# How the device identifies itself to the server
+id_type = serialNumber
+
+[download]
+# Directory where downloaded firmware files are saved
+output_dir = output
+
+# Whether to verify MD5 checksums after download
+verify_checksum = true
