@@ -12,7 +12,7 @@ class TestDefaults:
         assert SERVER_DEFAULTS["url"] == "moto-cds.appspot.com"
 
     def test_device_build_id(self):
-        assert "VVTAS35.51-100-3" in DEVICE_DEFAULTS["build_id"]
+        assert "VVTA35.51-100" in DEVICE_DEFAULTS["build_id"]
 
 
 class TestLoader:

@@ -11,9 +11,15 @@
 # can retrieve them with:
 #   getprop ro.build.fingerprint
 #   getprop ro.build.display.id
-#   getprop ro.mot.build.guid
+#   getprop ro.mot.build.guid        (this is ota_source_sha1)
 #   getprop ro.serialno
 #   etc.
+#
+# ── Known update chain for lamu_g (moto g05) ──
+#   VVTA35.51-28-15  (sha1: 23d670d5d06f351)  ← oldest observed
+#   VVTA35.51-65-5   (sha1: a363e2a67728d8a)
+#   VVTA35.51-100    (sha1: 190325d96009ac5)
+#   VVTAS35.51-100-3 (sha1: 96398c9adf48ac1)  ← latest observed
 
 [device]
 # --- deviceInfo fields ---
@@ -34,18 +40,19 @@ client_identity = motorola-ota-client-app
 carrier =
 bootloader_version =
 # Build fingerprint — from `getprop ro.build.fingerprint`
-fingerprint = motorola/lamul_g/lamul:15/VVTAS35.51-100-3/bb8ed4:user/release-keys
+fingerprint = motorola/lamul_g/lamul:15/VVTA35.51-100/e51bc9:user/release-keys
 radio_version =
 build_tags = release-keys
 build_type = user
 build_device = lamul
 # Build identifier — from `getprop ro.build.display.id`
-build_id = VVTAS35.51-100-3
-build_display_id = VVTAS35.51-100-3
+build_id = VVTA35.51-100
+build_display_id = VVTA35.51-100
 build_incremental_version =
 release_version = 15
 # Context key — from `getprop ro.mot.build.guid`
-ota_source_sha1 = 96398c9adf48ac1
+# Use an older sha1 to trigger an update check that finds a newer build
+ota_source_sha1 = 190325d96009ac5
 network = wifi
 apk_version = 3500094
 provisioned_time = 0

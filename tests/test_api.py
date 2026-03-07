@@ -7,7 +7,12 @@ import pytest
 import respx
 
 from motofw.src.api.body import check_body, resources_body
-from motofw.src.api.headers import DEFAULT_HEADERS, build_headers
+from motofw.src.api.headers import (
+    DEFAULT_HEADERS,
+    DOWNLOAD_HEADERS,
+    build_download_headers,
+    build_headers,
+)
 from motofw.src.api.orchestrator import check_update
 from motofw.src.api.response import parse_check_response, parse_content_resources
 from motofw.src.api.urls import check_url, resources_url, state_url
@@ -24,6 +29,21 @@ class TestHeaders:
         h = build_headers({"X-Custom": "val"})
         assert h["X-Custom"] == "val"
         assert h["Content-Type"] == "application/json"
+
+    def test_download_headers_identity(self):
+        assert DOWNLOAD_HEADERS["Accept-Encoding"] == "identity"
+        assert DOWNLOAD_HEADERS["Connection"] == "close"
+
+    def test_download_headers_with_resume(self):
+        h = build_download_headers(offset=1024, etag='"abc"')
+        assert h["Range"] == "bytes=1024-"
+        assert h["If-Match"] == '"abc"'
+        assert h["Accept-Encoding"] == "identity"
+
+    def test_download_headers_no_resume(self):
+        h = build_download_headers()
+        assert "Range" not in h
+        assert "If-Match" not in h
 
 
 class TestUrls:

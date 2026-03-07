@@ -17,7 +17,7 @@ class TestExtraInfo:
     def test_to_dict_has_fingerprint(self):
         d = ExtraInfo().to_dict()
         assert "fingerprint" in d
-        assert "VVTAS35" in d["fingerprint"]
+        assert "VVTA35" in d["fingerprint"]
 
     def test_imei_omitted_when_empty(self):
         ei = ExtraInfo(imei="", imei2="")

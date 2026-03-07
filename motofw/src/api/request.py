@@ -8,6 +8,8 @@ from typing import Any, Dict, List, Optional
 
 import httpx
 
+from motofw.src.api.headers import build_download_headers
+
 logger = logging.getLogger(__name__)
 
 
@@ -52,11 +54,21 @@ def stream_get(
     timeout: float = 60.0,
     extra_headers: Optional[Dict[str, str]] = None,
     retry_delays_s: Optional[List[float]] = None,
+    offset: int = 0,
+    etag: Optional[str] = None,
 ) -> httpx.Response:
     """Streaming GET to an absolute URL with retries.
 
+    Uses the exact download headers extracted from AdvancedFileDownloader:
+      Accept-Encoding: identity
+      Connection: close
+      Range: bytes=N-        (when resuming)
+      If-Match: <etag>       (when resuming with known ETag)
+
     The caller must iterate the stream and close the response.
     """
+    dl_headers = build_download_headers(extra_headers, offset=offset, etag=etag)
+
     delays = retry_delays_s or []
     attempts = [0.0, *delays]
     last_exc: BaseException | None = None
@@ -72,7 +84,7 @@ def stream_get(
                 follow_redirects=True,
             )
             resp = dl_client.send(
-                httpx.Request("GET", url, headers=extra_headers),
+                httpx.Request("GET", url, headers=dl_headers),
                 stream=True,
             )
             resp.raise_for_status()
