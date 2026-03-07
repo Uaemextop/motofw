@@ -89,6 +89,7 @@ def scan_updates(
     *,
     session: Optional[OTASession] = None,
     builds: Optional[list[dict[str, str]]] = None,
+    triggered_by: str = "user",
 ) -> ScanReport:
     """Query the server for each known build and collect available updates.
 
@@ -100,6 +101,8 @@ def scan_updates(
         Reuse an existing session, or one will be created.
     builds:
         Override the default list of builds to query.
+    triggered_by:
+        The triggeredBy value for the check request.
 
     Returns
     -------
@@ -123,7 +126,7 @@ def scan_updates(
                 build["sha1"],
             )
             try:
-                body = check_body(build_cfg)
+                body = check_body(build_cfg, triggered_by=triggered_by)
                 path = check_url(build_cfg)
                 resp_http = session.post(path, json_body=body)
                 raw: dict[str, Any] = resp_http.json()

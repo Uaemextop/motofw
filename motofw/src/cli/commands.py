@@ -25,6 +25,7 @@ from motofw.src.cli.output import (
     print_update_info,
 )
 from motofw.src.cli.parser import build_parser
+from motofw.src.config.options import CONFIGURABLE_PARAMS
 from motofw.src.config.settings import Config, load_config
 from motofw.src.download.manager import download_update
 
@@ -38,6 +39,11 @@ def _apply_overrides(
     serial: Optional[str] = None,
     output_dir: Optional[Path] = None,
     no_verify: bool = False,
+    triggered_by: Optional[str] = None,
+    network: Optional[str] = None,
+    bootloader_status: Optional[str] = None,
+    build_type: Optional[str] = None,
+    user_location: Optional[str] = None,
 ) -> Config:
     """Return a new frozen Config with selected fields replaced."""
     kw = {f.name: getattr(cfg, f.name) for f in cfg.__dataclass_fields__.values()}
@@ -49,6 +55,14 @@ def _apply_overrides(
         kw["output_dir"] = output_dir
     if no_verify:
         kw["verify_checksum"] = False
+    if network is not None:
+        kw["network"] = network
+    if bootloader_status is not None:
+        kw["bootloader_status"] = bootloader_status
+    if build_type is not None:
+        kw["build_type"] = build_type
+    if user_location is not None:
+        kw["user_location"] = user_location
     return Config(**kw)
 
 
@@ -75,11 +89,11 @@ def _dump_curl(cfg: Config, body: dict[str, Any]) -> None:
     )
 
 
-def _cmd_query(cfg: Config, *, dump_request: bool = False, raw: bool = False) -> int:
+def _cmd_query(cfg: Config, *, dump_request: bool = False, raw: bool = False, triggered_by: str = "user") -> int:
     """Execute the ``query`` sub-command."""
     logger.info("Query: build_id=%s sha1=%s serial=%s", cfg.build_id, cfg.ota_source_sha1, cfg.serial_number)
 
-    body = check_body(cfg)
+    body = check_body(cfg, triggered_by=triggered_by)
 
     if dump_request:
         _dump_curl(cfg, body)
@@ -130,14 +144,72 @@ def _cmd_download(cfg: Config, *, dump_request: bool = False) -> int:
         return 0
 
 
-def _cmd_scan(cfg: Config, *, no_interactive: bool = False) -> int:
+def _choose_option(label: str, options: list[str], current: str) -> str:
+    """Present a numbered menu for a single parameter and return the chosen value."""
+    sys.stdout.write(f"\n{label} (current: {current}):\n")
+    for idx, opt in enumerate(options, 1):
+        marker = " *" if opt == current else ""
+        sys.stdout.write(f"  [{idx}] {opt}{marker}\n")
+    sys.stdout.write(f"  [0] Keep current ({current})\n")
+
+    while True:
+        try:
+            sys.stdout.write("  Choice: ")
+            sys.stdout.flush()
+            raw = input().strip()
+        except (EOFError, KeyboardInterrupt):
+            return current
+        if not raw or raw == "0":
+            return current
+        try:
+            choice = int(raw)
+        except ValueError:
+            sys.stdout.write("  Please enter a number.\n")
+            continue
+        if 1 <= choice <= len(options):
+            return options[choice - 1]
+        sys.stdout.write(f"  Please enter 0–{len(options)}.\n")
+
+
+def _interactive_configure(cfg: Config, triggered_by: str) -> tuple[Config, str]:
+    """Let the user interactively select API request parameters.
+
+    Returns the updated Config and triggered_by value.
+    """
+    sys.stdout.write("\n── Configure API request parameters ──\n")
+    sys.stdout.write("(Values from Motorola OTA APK smali analysis)\n")
+
+    overrides: dict[str, Any] = {}
+
+    for key, info in CONFIGURABLE_PARAMS.items():
+        if key == "triggered_by":
+            triggered_by = _choose_option(info["label"], info["options"], triggered_by)
+        else:
+            current = getattr(cfg, key, info["default"])
+            chosen = _choose_option(info["label"], info["options"], current)
+            if chosen != current:
+                overrides[key] = chosen
+
+    if overrides:
+        cfg = _apply_overrides(cfg, **overrides)
+
+    sys.stdout.write("\n── Configuration complete ──\n")
+    return cfg, triggered_by
+
+
+def _cmd_scan(cfg: Config, *, no_interactive: bool = False, configure: bool = False, triggered_by: str = "user") -> int:
     """Execute the ``scan`` sub-command — find all available OTAs and let user choose."""
+    if configure:
+        cfg, triggered_by = _interactive_configure(cfg, triggered_by)
+
     sys.stdout.write("Scanning all known builds for available updates …\n")
     sys.stdout.write(f"Device: {cfg.model} ({cfg.product}/{cfg.hardware})\n")
-    sys.stdout.write(f"Serial: {cfg.serial_number}  IMEI: {cfg.imei}\n\n")
+    sys.stdout.write(f"Serial: {cfg.serial_number}  IMEI: {cfg.imei}\n")
+    sys.stdout.write(f"Network: {cfg.network}  Bootloader: {cfg.bootloader_status}  "
+                     f"Build type: {cfg.build_type}  Trigger: {triggered_by}\n\n")
 
     with OTASession(cfg) as ses:
-        report = scan_updates(cfg, session=ses)
+        report = scan_updates(cfg, session=ses, triggered_by=triggered_by)
 
     if report.errors:
         for err in report.errors:
@@ -246,18 +318,35 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         overrides["output_dir"] = args.output_dir
     if hasattr(args, "no_verify") and args.no_verify:
         overrides["no_verify"] = True
+    # New configurable parameter overrides
+    if hasattr(args, "network") and args.network:
+        overrides["network"] = args.network
+    if hasattr(args, "bootloader_status") and args.bootloader_status:
+        overrides["bootloader_status"] = args.bootloader_status
+    if hasattr(args, "build_type") and args.build_type:
+        overrides["build_type"] = args.build_type
+    if hasattr(args, "user_location") and args.user_location:
+        overrides["user_location"] = args.user_location
     if overrides:
         cfg = _apply_overrides(cfg, **overrides)
+
+    triggered_by = getattr(args, "triggered_by", None) or "user"
 
     if args.command == "query":
         return _cmd_query(
             cfg,
             dump_request=getattr(args, "dump_request", False),
             raw=getattr(args, "raw", False),
+            triggered_by=triggered_by,
         )
     if args.command == "download":
         return _cmd_download(cfg, dump_request=getattr(args, "dump_request", False))
     if args.command == "scan":
-        return _cmd_scan(cfg, no_interactive=getattr(args, "no_interactive", False))
+        return _cmd_scan(
+            cfg,
+            no_interactive=getattr(args, "no_interactive", False),
+            configure=getattr(args, "configure", False),
+            triggered_by=triggered_by,
+        )
     ap.print_help()
     return 1

@@ -5,6 +5,48 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
+from motofw.src.config.options import (
+    BOOTLOADER_STATUS_OPTIONS,
+    BUILD_TYPE_OPTIONS,
+    NETWORK_OPTIONS,
+    TRIGGERED_BY_OPTIONS,
+    USER_LOCATION_OPTIONS,
+)
+
+
+def _add_request_overrides(p: argparse.ArgumentParser) -> None:
+    """Add shared --triggered-by / --network / etc. flags to *p*."""
+    p.add_argument(
+        "--triggered-by",
+        choices=TRIGGERED_BY_OPTIONS,
+        default=None,
+        help="Override triggeredBy (user/polling/pairing/setup).",
+    )
+    p.add_argument(
+        "--network",
+        choices=NETWORK_OPTIONS,
+        default=None,
+        help="Override network type (wifi/cellular/cell3g/cell4g/cell5g/roaming/unknown).",
+    )
+    p.add_argument(
+        "--bootloader-status",
+        choices=BOOTLOADER_STATUS_OPTIONS,
+        default=None,
+        help="Override bootloader status (locked/unlocked).",
+    )
+    p.add_argument(
+        "--build-type",
+        choices=BUILD_TYPE_OPTIONS,
+        default=None,
+        help="Override Android build type (user/userdebug/eng).",
+    )
+    p.add_argument(
+        "--user-location",
+        choices=USER_LOCATION_OPTIONS,
+        default=None,
+        help="Override user location (Non-CN/CN).",
+    )
+
 
 def build_parser() -> argparse.ArgumentParser:
     """Return the top-level argument parser with sub-commands."""
@@ -24,6 +66,7 @@ def build_parser() -> argparse.ArgumentParser:
     qp.add_argument("--serial", default=None, help="Override serial number.")
     qp.add_argument("--dump-request", action="store_true", default=False, help="Print the request body and equivalent curl command.")
     qp.add_argument("--raw", action="store_true", default=False, help="Print the full raw server response JSON.")
+    _add_request_overrides(qp)
 
     # download
     dp = sub.add_parser("download", help="Download an available OTA update.")
@@ -32,6 +75,7 @@ def build_parser() -> argparse.ArgumentParser:
     dp.add_argument("--serial", default=None, help="Override serial number.")
     dp.add_argument("--no-verify", action="store_true", default=False, help="Skip MD5 check.")
     dp.add_argument("--dump-request", action="store_true", default=False, help="Print the request body and equivalent curl command.")
+    _add_request_overrides(dp)
 
     # scan
     sp = sub.add_parser("scan", help="Scan all known builds for available OTA updates and choose which to download.")
@@ -39,5 +83,7 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("-o", "--output-dir", type=Path, default=None, help="Save directory for downloads.")
     sp.add_argument("--no-verify", action="store_true", default=False, help="Skip MD5 check.")
     sp.add_argument("--no-interactive", action="store_true", default=False, help="Skip interactive menu, just list results.")
+    sp.add_argument("--configure", action="store_true", default=False, help="Interactively configure API request parameters before scanning.")
+    _add_request_overrides(sp)
 
     return parser
