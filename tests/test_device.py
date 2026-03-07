@@ -10,8 +10,9 @@ class TestDeviceInfo:
         d = DeviceInfo().to_dict()
         assert "osVersion" in d
         assert "userLanguage" in d
-        # Defaults are empty — values come from device.ini
+        # Device-specific fields default to empty (require device.ini)
         assert d["manufacturer"] == ""
+        # Protocol constants retain defaults (same for all Motorola devices)
         assert d["os"] == "Android"
 
 

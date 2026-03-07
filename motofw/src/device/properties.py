@@ -23,7 +23,7 @@ class DeviceInfo:
     brand: str = ""
     model: str = ""
     product: str = ""
-    os: str = "Android"
+    os: str = "Android"  # Protocol constant — all Motorola OTA devices are Android
     os_version: str = ""
     country: str = ""
     region: str = ""
@@ -51,6 +51,7 @@ class DeviceInfo:
 class ExtraInfo:
     """``extraInfo`` section of the OTA request body."""
 
+    # Protocol constants — same for all Motorola OTA devices (from smali)
     client_identity: str = "motorola-ota-client-app"
     carrier: str = ""
     bootloader_version: str = ""
@@ -59,20 +60,20 @@ class ExtraInfo:
     fingerprint: str = ""
     radio_version: str = ""
     build_tags: str = ""
-    build_type: str = "user"
+    build_type: str = "user"  # Protocol default from BuildPropReader.smali
     build_device: str = ""
     build_id: str = ""
     build_display_id: str = ""
     build_incremental_version: str = ""
     release_version: str = ""
     ota_source_sha1: str = ""
-    network: str = "wifi"
-    apk_version: int = 3500094
+    network: str = "wifi"  # Protocol default from NetworkUtils.smali
+    apk_version: int = 3500094  # Protocol constant — OTA APK version
     provisioned_time: int = 0
     incremental_version: int = 0
     additional_info: str = ""
-    user_location: str = "Non-CN"
-    bootloader_status: str = "locked"
+    user_location: str = "Non-CN"  # Protocol default from LocationUtils.smali
+    bootloader_status: str = "locked"  # Protocol default from BuildPropReader.smali
     device_rooted: str = "false"
     is_4gb_ram: bool = False
     device_chipset: str = ""
