@@ -308,6 +308,35 @@ def _interactive_download(cfg: Config, report: ScanReport) -> int:
         return 0
 
 
+def _validate_device_config(cfg: Config) -> bool:
+    """Check that essential device fields are configured.
+
+    Returns True if the config looks valid; False if required fields are
+    missing (empty).  Prints a helpful message when validation fails.
+    """
+    required = {
+        "fingerprint": cfg.fingerprint,
+        "serial_number": cfg.serial_number,
+        "product": cfg.product,
+    }
+    missing = [k for k, v in required.items() if not v]
+    if missing:
+        sys.stderr.write(
+            "\n⚠  Device not configured — the following required fields are empty:\n"
+        )
+        for k in missing:
+            sys.stderr.write(f"   • {k}\n")
+        sys.stderr.write(
+            "\nSetup options:\n"
+            "  1. Connect your device via USB and run:\n"
+            "       motofw settings auto-settings-adb\n"
+            "  2. Copy and edit the example file:\n"
+            "       cp device.ini.example device.ini\n\n"
+        )
+        return False
+    return True
+
+
 def main(argv: Optional[Sequence[str]] = None) -> int:
     """CLI entry point (registered in pyproject.toml)."""
     ap = build_parser()
@@ -344,6 +373,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     triggered_by = getattr(args, "triggered_by", None) or "user"
 
     if args.command == "query":
+        if not _validate_device_config(cfg):
+            return 1
         return _cmd_query(
             cfg,
             dump_request=getattr(args, "dump_request", False),
@@ -351,8 +382,12 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             triggered_by=triggered_by,
         )
     if args.command == "download":
+        if not _validate_device_config(cfg):
+            return 1
         return _cmd_download(cfg, dump_request=getattr(args, "dump_request", False))
     if args.command == "scan":
+        if not _validate_device_config(cfg):
+            return 1
         return _cmd_scan(
             cfg,
             no_interactive=getattr(args, "no_interactive", False),

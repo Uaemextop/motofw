@@ -2,6 +2,10 @@
 
 Each class has a ``to_dict()`` method that produces the exact camelCase
 keys the Motorola server expects.
+
+Device-specific fields default to empty strings — concrete values come
+from ``device.ini`` (loaded via Config) and are injected by the builder
+functions in ``motofw.src.device.builder``.
 """
 
 from __future__ import annotations
@@ -14,17 +18,17 @@ from typing import Any, Dict
 class DeviceInfo:
     """``deviceInfo`` section of the OTA request body."""
 
-    manufacturer: str = "motorola"
-    hardware: str = "lamu"
-    brand: str = "motorola"
-    model: str = "moto g05"
-    product: str = "lamul_g"
+    manufacturer: str = ""
+    hardware: str = ""
+    brand: str = ""
+    model: str = ""
+    product: str = ""
     os: str = "Android"
-    os_version: str = "15"
-    country: str = "MX"
-    region: str = "MX"
-    language: str = "es"
-    user_language: str = "es_MX"
+    os_version: str = ""
+    country: str = ""
+    region: str = ""
+    language: str = ""
+    user_language: str = ""
 
     def to_dict(self) -> Dict[str, str]:
         """Serialize with the server's camelCase key names."""
@@ -50,18 +54,18 @@ class ExtraInfo:
     client_identity: str = "motorola-ota-client-app"
     carrier: str = ""
     bootloader_version: str = ""
-    brand: str = "motorola"
-    model: str = "moto g05"
-    fingerprint: str = "motorola/lamul_g/lamul:15/VVTA35.51-100/e51bc9:user/release-keys"
+    brand: str = ""
+    model: str = ""
+    fingerprint: str = ""
     radio_version: str = ""
-    build_tags: str = "release-keys"
+    build_tags: str = ""
     build_type: str = "user"
-    build_device: str = "lamul"
-    build_id: str = "VVTA35.51-100"
-    build_display_id: str = "VVTA35.51-100"
+    build_device: str = ""
+    build_id: str = ""
+    build_display_id: str = ""
     build_incremental_version: str = ""
-    release_version: str = "15"
-    ota_source_sha1: str = "190325d96009ac5"
+    release_version: str = ""
+    ota_source_sha1: str = ""
     network: str = "wifi"
     apk_version: int = 3500094
     provisioned_time: int = 0
@@ -121,7 +125,7 @@ class ExtraInfo:
 class IdentityInfo:
     """``identityInfo`` section of the OTA request body."""
 
-    serial_number: str = "ZY32LNRW97"
+    serial_number: str = ""
 
     def to_dict(self) -> Dict[str, str]:
         """Serialize with the server's camelCase key names."""

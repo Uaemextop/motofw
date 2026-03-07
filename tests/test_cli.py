@@ -49,6 +49,16 @@ class TestMain:
         with pytest.raises(SystemExit):
             main(["--bogus"])
 
+    def test_query_without_device_ini_fails(self):
+        """query should fail when device is not configured (empty defaults)."""
+        rc = main(["query"])
+        assert rc == 1
+
+    def test_scan_without_device_ini_fails(self):
+        """scan should fail when device is not configured (empty defaults)."""
+        rc = main(["scan", "--no-interactive"])
+        assert rc == 1
+
 
 class TestLogging:
     def test_setup_logging_runs(self):

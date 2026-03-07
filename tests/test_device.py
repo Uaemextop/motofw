@@ -10,13 +10,21 @@ class TestDeviceInfo:
         d = DeviceInfo().to_dict()
         assert "osVersion" in d
         assert "userLanguage" in d
-        assert d["manufacturer"] == "motorola"
+        # Defaults are empty — values come from device.ini
+        assert d["manufacturer"] == ""
+        assert d["os"] == "Android"
 
 
 class TestExtraInfo:
     def test_to_dict_has_fingerprint(self):
         d = ExtraInfo().to_dict()
         assert "fingerprint" in d
+        # Default is empty — values come from device.ini
+        assert d["fingerprint"] == ""
+
+    def test_to_dict_with_configured_fingerprint(self):
+        ei = ExtraInfo(fingerprint="motorola/lamul_g/lamul:15/VVTA35.51-100/e51bc9:user/release-keys")
+        d = ei.to_dict()
         assert "VVTA35" in d["fingerprint"]
 
     def test_imei_omitted_when_empty(self):
@@ -37,15 +45,15 @@ class TestIdentityInfo:
 
 
 class TestBuilders:
-    def test_build_device_info(self, default_config: Config):
-        di = build_device_info(default_config)
+    def test_build_device_info(self, custom_config: Config):
+        di = build_device_info(custom_config)
         assert di.manufacturer == "motorola"
         assert di.hardware == "lamu"
 
-    def test_build_extra_info(self, default_config: Config):
-        ei = build_extra_info(default_config)
+    def test_build_extra_info(self, custom_config: Config):
+        ei = build_extra_info(custom_config)
         assert ei.client_identity == "motorola-ota-client-app"
 
-    def test_build_identity_info(self, default_config: Config):
-        ii = build_identity_info(default_config)
-        assert ii.serial_number == default_config.serial_number
+    def test_build_identity_info(self, custom_config: Config):
+        ii = build_identity_info(custom_config)
+        assert ii.serial_number == custom_config.serial_number

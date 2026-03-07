@@ -1,7 +1,8 @@
-"""Evidence-based default values extracted from smali analysis and device logs.
+"""Default values for motofw configuration.
 
-Every constant originates from decompiled Motorola OTA APK bytecode
-or captured request/response logs.  Nothing is invented.
+Server and protocol constants come from the Motorola OTA APK smali analysis.
+Device-specific values are intentionally empty — they MUST be provided via
+``device.ini`` (or auto-generated with ``motofw settings auto-settings-adb``).
 """
 
 SERVER_DEFAULTS: dict[str, str] = {
@@ -19,31 +20,33 @@ DOWNLOAD_DEFAULTS: dict[str, str] = {
     "verify_checksum": "true",
 }
 
+# Device-specific values are empty by default.  Users MUST configure them
+# via device.ini or by running ``motofw settings auto-settings-adb``.
 DEVICE_DEFAULTS: dict[str, str] = {
-    "manufacturer": "motorola",
-    "hardware": "lamu",
-    "brand": "motorola",
-    "model": "moto g05",
-    "product": "lamul_g",
+    "manufacturer": "",
+    "hardware": "",
+    "brand": "",
+    "model": "",
+    "product": "",
     "os": "Android",
-    "os_version": "15",
-    "country": "MX",
-    "region": "MX",
-    "language": "es",
-    "user_language": "es_MX",
+    "os_version": "",
+    "country": "",
+    "region": "",
+    "language": "",
+    "user_language": "",
     "client_identity": "motorola-ota-client-app",
     "carrier": "",
     "bootloader_version": "",
-    "fingerprint": "motorola/lamul_g/lamul:15/VVTA35.51-100/e51bc9:user/release-keys",
+    "fingerprint": "",
     "radio_version": "",
-    "build_tags": "release-keys",
+    "build_tags": "",
     "build_type": "user",
-    "build_device": "lamul",
-    "build_id": "VVTA35.51-100",
-    "build_display_id": "VVTA35.51-100",
+    "build_device": "",
+    "build_id": "",
+    "build_display_id": "",
     "build_incremental_version": "",
-    "release_version": "15",
-    "ota_source_sha1": "190325d96009ac5",
+    "release_version": "",
+    "ota_source_sha1": "",
     "network": "wifi",
     "apk_version": "3500094",
     "provisioned_time": "0",
@@ -57,8 +60,8 @@ DEVICE_DEFAULTS: dict[str, str] = {
 }
 
 IDENTITY_DEFAULTS: dict[str, str] = {
-    "serial_number": "ZY32LNRW97",
-    "imei": "359488357396203",
+    "serial_number": "",
+    "imei": "",
     "imei2": "",
     "mccmnc": "",
     "mccmnc2": "",
