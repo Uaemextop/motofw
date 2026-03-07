@@ -1,6 +1,6 @@
 """Allow ``python -m motofw`` to invoke the CLI."""
 
-from motofw.cli import main
+from motofw.src.cli.commands import main
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

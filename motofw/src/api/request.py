@@ -1,8 +1,4 @@
-"""Low-level HTTP request execution with retry logic.
-
-Wraps an :class:`httpx.Client` and adds automatic retry with
-configurable back-off delays.  Used by :mod:`motofw.src.api.session`.
-"""
+"""Low-level HTTP request execution with retry and back-off."""
 
 from __future__ import annotations
 
@@ -22,128 +18,68 @@ def post_with_retry(
     json_body: Dict[str, Any],
     extra_headers: Optional[Dict[str, str]] = None,
     retry_delays_s: Optional[List[float]] = None,
-    base_url: str = "",
+    label: str = "",
 ) -> httpx.Response:
-    """Send a POST request with retry + back-off.
+    """POST *json_body* to *path* with automatic retries.
 
-    Parameters
-    ----------
-    client:
-        The :class:`httpx.Client` to use.
-    path:
-        Relative URL path.
-    json_body:
-        Python dict to send as JSON.
-    extra_headers:
-        Additional headers merged on top of the client defaults.
-    retry_delays_s:
-        List of delay durations in seconds between retries.
-    base_url:
-        For logging purposes only.
-
-    Returns
-    -------
-    httpx.Response
-        The successful response.
-
-    Raises
-    ------
-    httpx.HTTPStatusError
-        If the final attempt still receives a non-2xx status.
-    httpx.TransportError
-        If the final attempt fails at the transport level.
+    Returns the first successful (2xx) response.  Raises the last
+    exception when all attempts are exhausted.
     """
     delays = retry_delays_s or []
     attempts = [0.0, *delays]
     last_exc: BaseException | None = None
 
-    for attempt_idx, delay in enumerate(attempts):
-        if delay > 0:
-            logger.info(
-                "Retry %d/%d — waiting %.1f s before next attempt",
-                attempt_idx, len(delays), delay,
-            )
-            time.sleep(delay)
-
+    for idx, wait in enumerate(attempts):
+        if wait > 0:
+            logger.info("Retry %d/%d — waiting %.1f s", idx, len(delays), wait)
+            time.sleep(wait)
         try:
-            logger.debug(
-                "POST %s%s (attempt %d/%d)",
-                base_url, path, attempt_idx + 1, len(attempts),
-            )
-            response = client.post(path, json=json_body, headers=extra_headers)
-            response.raise_for_status()
-            logger.debug("Response %d from %s%s", response.status_code, base_url, path)
-            return response
-
+            logger.debug("POST %s%s (attempt %d/%d)", label, path, idx + 1, len(attempts))
+            resp = client.post(path, json=json_body, headers=extra_headers)
+            resp.raise_for_status()
+            return resp
         except (httpx.HTTPStatusError, httpx.TransportError) as exc:
             last_exc = exc
-            logger.warning(
-                "Attempt %d/%d failed for %s: %s",
-                attempt_idx + 1, len(attempts), path, exc,
-            )
+            logger.warning("Attempt %d/%d failed: %s", idx + 1, len(attempts), exc)
 
     assert last_exc is not None
     raise last_exc
 
 
-def stream_get_with_retry(
+def stream_get(
     url: str,
     *,
     timeout: float = 60.0,
     extra_headers: Optional[Dict[str, str]] = None,
     retry_delays_s: Optional[List[float]] = None,
 ) -> httpx.Response:
-    """Start a streaming GET to an absolute URL with retry.
+    """Streaming GET to an absolute URL with retries.
 
-    The caller is responsible for iterating and closing the response.
-
-    Parameters
-    ----------
-    url:
-        Absolute URL (e.g. ``https://dlmgr.gtm.svcmot.com/…``).
-    timeout:
-        Request timeout in seconds.
-    extra_headers:
-        Optional additional headers.
-    retry_delays_s:
-        List of delay durations in seconds between retries.
-
-    Returns
-    -------
-    httpx.Response
-        A response with an open byte stream.
+    The caller must iterate the stream and close the response.
     """
     delays = retry_delays_s or []
     attempts = [0.0, *delays]
     last_exc: BaseException | None = None
 
-    for attempt_idx, delay in enumerate(attempts):
-        if delay > 0:
-            logger.info(
-                "Retry %d/%d (stream_get) — waiting %.1f s",
-                attempt_idx, len(delays), delay,
-            )
-            time.sleep(delay)
-
+    for idx, wait in enumerate(attempts):
+        if wait > 0:
+            logger.info("Retry %d/%d (stream) — waiting %.1f s", idx, len(delays), wait)
+            time.sleep(wait)
         try:
-            logger.debug("GET %s (stream, attempt %d/%d)", url, attempt_idx + 1, len(attempts))
+            logger.debug("GET %s (stream, attempt %d/%d)", url, idx + 1, len(attempts))
             dl_client = httpx.Client(
                 timeout=httpx.Timeout(timeout, connect=timeout),
                 follow_redirects=True,
             )
-            response = dl_client.send(
+            resp = dl_client.send(
                 httpx.Request("GET", url, headers=extra_headers),
                 stream=True,
             )
-            response.raise_for_status()
-            return response
-
+            resp.raise_for_status()
+            return resp
         except (httpx.HTTPStatusError, httpx.TransportError) as exc:
             last_exc = exc
-            logger.warning(
-                "stream_get attempt %d/%d failed for %s: %s",
-                attempt_idx + 1, len(attempts), url, exc,
-            )
+            logger.warning("Stream attempt %d/%d failed: %s", idx + 1, len(attempts), exc)
 
     assert last_exc is not None
     raise last_exc

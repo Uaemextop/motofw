@@ -1,1 +1,1 @@
-"""motofw.src — Internal implementation subpackages."""
+"""Internal implementation subpackages for motofw."""
